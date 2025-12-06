@@ -1,9 +1,8 @@
 {
     "functions": {
-      "api/**/*": {
-        "maxDuration": 30
+      "app/api/**/*": {
+        "runtime": "nodejs20.x"
       }
-    },
-    "buildCommand": "npm install && npx prisma generate && npm run build"
+    }
   }
   
