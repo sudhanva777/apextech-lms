@@ -20,8 +20,8 @@ export default async function TasksPage({
   const tasks = await prisma.task.findMany({
     orderBy: { createdAt: "desc" },
     include: {
-      studentTasks: {
-        include: { user: true },
+      StudentTask: {
+        include: { User: true },
       },
     },
   });
@@ -35,8 +35,8 @@ export default async function TasksPage({
   // Get all student tasks for filtering
   let studentTasks = await prisma.studentTask.findMany({
     include: {
-      task: true,
-      user: true,
+      Task: true,
+      User: true,
     },
     orderBy: { createdAt: "desc" },
   });
@@ -46,7 +46,7 @@ export default async function TasksPage({
     studentTasks = studentTasks.filter((st) => st.status === statusFilter);
   }
   if (weekFilter) {
-    studentTasks = studentTasks.filter((st) => st.task.week === weekFilter);
+    studentTasks = studentTasks.filter((st) => st.Task.week === weekFilter);
   }
   if (studentFilter) {
     studentTasks = studentTasks.filter((st) => st.userId === studentFilter);

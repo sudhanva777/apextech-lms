@@ -71,6 +71,7 @@ export async function POST(req: NextRequest) {
       // Create new attendance
       const attendance = await prisma.attendance.create({
         data: {
+          id: crypto.randomUUID(),
           userId,
           date: attendanceDate,
           status,

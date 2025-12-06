@@ -12,7 +12,7 @@ interface ProjectListItemProps {
     fileUrl: string | null;
     githubRepo: string | null;
     submittedAt: Date;
-    user: {
+    User: {
       name: string | null;
       email: string | null;
     };
@@ -70,7 +70,7 @@ export default function ProjectListItem({ submission }: ProjectListItemProps) {
             {submission.description}
           </p>
           <div className="flex items-center gap-6 text-sm text-gray-500">
-            <span>Student: {submission.user.name || submission.user.email || "N/A"}</span>
+            <span>Student: {submission.User.name || submission.User.email || "N/A"}</span>
             <span>
               Submitted: {new Date(submission.submittedAt).toLocaleDateString()}
             </span>

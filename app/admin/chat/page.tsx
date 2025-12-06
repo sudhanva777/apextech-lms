@@ -6,7 +6,6 @@ import Link from "next/link";
 export default async function AdminChatListPage() {
   const session = await requireAdmin();
 
-  // Get current admin
   if (!session.user?.email) {
     return <div>Error: No user email found</div>;
   }
@@ -20,13 +19,12 @@ export default async function AdminChatListPage() {
     return <div>Error: Admin not found</div>;
   }
 
-  // Get all messages where admin is receiver (students messaging admin)
   const messages = await prisma.message.findMany({
     where: {
       receiverId: admin.id,
     },
     include: {
-      sender: {
+      User_Message_senderIdToUser: {   // CORRECT RELATION NAME
         select: {
           id: true,
           name: true,
@@ -40,14 +38,16 @@ export default async function AdminChatListPage() {
     },
   });
 
-  // Get unique students who have messaged
   const studentsMap = new Map();
-  messages.forEach((msg) => {
-    if (msg.sender.role === "STUDENT" && !studentsMap.has(msg.senderId)) {
-      studentsMap.set(msg.senderId, {
-        id: msg.sender.id,
-        name: msg.sender.name,
-        email: msg.sender.email,
+
+  messages.forEach((msg: { User_Message_senderIdToUser: { id: string; name: string | null; email: string | null; role: string } | null; content: string; createdAt: Date }) => {
+    const sender = msg.User_Message_senderIdToUser; // FIXED FIELD
+
+    if (sender?.role === "STUDENT" && !studentsMap.has(sender.id)) {
+      studentsMap.set(sender.id, {
+        id: sender.id,
+        name: sender.name,
+        email: sender.email,
         lastMessage: msg.content,
         lastMessageTime: msg.createdAt,
       });
@@ -110,4 +110,3 @@ export default async function AdminChatListPage() {
     </div>
   );
 }
-

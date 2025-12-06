@@ -32,25 +32,25 @@ export default async function AdminDashboard() {
     prisma.projectSubmission.count({ where: { status: "SUBMITTED" } }),
     prisma.projectSubmission.count({ where: { status: "APPROVED" } }),
     prisma.projectSubmission.count({ where: { status: "REJECTED" } }),
-    (prisma as any).taskSubmission.count(),
-    (prisma as any).taskSubmission.count({ where: { status: "PENDING" } }),
-    (prisma as any).taskSubmission.count({ where: { status: "ACCEPTED" } }),
-    (prisma as any).taskSubmission.count({ where: { status: "REJECTED" } }),
+    prisma.taskSubmission.count(),
+    prisma.taskSubmission.count({ where: { status: "PENDING" } }),
+    prisma.taskSubmission.count({ where: { status: "ACCEPTED" } }),
+    prisma.taskSubmission.count({ where: { status: "REJECTED" } }),
     prisma.user.findMany({
       where: { role: "STUDENT" },
       orderBy: { createdAt: "desc" },
       take: 5,
-      include: { studentProfile: true },
+      include: { StudentProfile: true },
     }),
     prisma.projectSubmission.findMany({
       orderBy: { createdAt: "desc" },
       take: 5,
-      include: { user: true },
+      include: { User: true },
     }),
     prisma.studentTask.findMany({
       orderBy: { createdAt: "desc" },
       take: 5,
-      include: { task: true, user: true },
+      include: { Task: true, User: true },
     }),
   ]);
 
@@ -204,7 +204,7 @@ export default async function AdminDashboard() {
               <p className="text-gray-500 text-sm">No students yet</p>
             ) : (
               <div className="space-y-4">
-                {recentStudents.map((student) => (
+                {recentStudents.map((student: { id: string; name: string | null; email: string | null; createdAt: Date; StudentProfile: { programTrack: string | null } | null }) => (
                   <Link
                     key={student.id}
                     href={`/admin/students/${student.id}`}
@@ -238,14 +238,14 @@ export default async function AdminDashboard() {
               <p className="text-gray-500 text-sm">No submissions yet</p>
             ) : (
               <div className="space-y-4">
-                {recentSubmissions.map((submission) => (
+                {recentSubmissions.map((submission: { id: string; title: string; status: string; User: { name: string | null } }) => (
                   <Link
                     key={submission.id}
                     href={`/admin/projects/${submission.id}`}
                     className="block p-3 rounded-lg hover:bg-gray-50 transition-colors"
                   >
                     <p className="font-semibold text-gray-900 truncate">{submission.title}</p>
-                    <p className="text-sm text-gray-600">{submission.user.name || "N/A"}</p>
+                    <p className="text-sm text-gray-600">{submission.User.name || "N/A"}</p>
                     <span
                       className={`inline-block mt-1 px-2 py-0.5 rounded text-xs font-medium ${
                         submission.status === "APPROVED"
@@ -280,13 +280,13 @@ export default async function AdminDashboard() {
               <p className="text-gray-500 text-sm">No tasks assigned yet</p>
             ) : (
               <div className="space-y-4">
-                {recentTasks.map((studentTask) => (
+                {recentTasks.map((studentTask: { id: string; status: string; Task: { title: string }; User: { name: string | null } }) => (
                   <div key={studentTask.id} className="p-3 rounded-lg hover:bg-gray-50">
                     <p className="font-semibold text-gray-900 truncate">
-                      {studentTask.task.title}
+                      {studentTask.Task.title}
                     </p>
                     <p className="text-sm text-gray-600">
-                      {studentTask.user.name || "N/A"}
+                      {studentTask.User.name || "N/A"}
                     </p>
                     <span
                       className={`inline-block mt-1 px-2 py-0.5 rounded text-xs font-medium ${

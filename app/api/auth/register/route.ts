@@ -37,11 +37,13 @@ export async function POST(req: NextRequest) {
 
     const user = await prisma.user.create({
       data: {
+        id: crypto.randomUUID(),
         name,
         email,
         passwordHash,
         phone: phone || null,
         role: "STUDENT",
+        updatedAt: new Date(),
       },
     });
 

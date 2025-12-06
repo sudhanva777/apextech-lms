@@ -12,11 +12,20 @@ export async function POST(req: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
 
-    if (!session?.user) {
+    if (!session?.user?.email) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const userId = (session.user as any).id;
+    const user = await prisma.user.findUnique({
+      where: { email: session.user.email },
+      select: { id: true },
+    });
+
+    if (!user) {
+      return NextResponse.json({ error: "User not found" }, { status: 404 });
+    }
+
+    const userId = user.id;
 
     const formData = await req.formData();
     const taskId = formData.get("taskId") as string;
@@ -42,7 +51,7 @@ export async function POST(req: NextRequest) {
     // Verify the task is assigned to this student
     const studentTask = await prisma.studentTask.findUnique({
       where: { id: studentTaskId },
-      include: { user: true, task: true },
+      include: { User: true, Task: true },
     });
 
     if (!studentTask || studentTask.userId !== userId) {
@@ -125,7 +134,7 @@ export async function POST(req: NextRequest) {
     // Create or update submission
     if (submissionId) {
       // Update existing rejected submission
-      await (prisma as any).taskSubmission.update({
+      await prisma.taskSubmission.update({
         where: { id: submissionId },
         data: {
           answerText: answerText || null,
@@ -137,13 +146,15 @@ export async function POST(req: NextRequest) {
       });
     } else {
       // Create new submission
-      await (prisma as any).taskSubmission.create({
+      await prisma.taskSubmission.create({
         data: {
+          id: crypto.randomUUID(),
           studentId: userId,
           taskId: taskId,
           answerText: answerText || null,
           fileUrl: fileUrl,
           status: "PENDING",
+          updatedAt: new Date(),
         },
       });
     }

@@ -12,17 +12,17 @@ export default async function TaskReviewDetailPage({
 }) {
   const session = await requireAdmin();
 
-  const submission = await (prisma as any).taskSubmission.findUnique({
+  const submission = await prisma.taskSubmission.findUnique({
     where: { id: params.id },
     include: {
-      student: {
+      User: {
         select: {
           id: true,
           name: true,
           email: true,
         },
       },
-      task: {
+      Task: {
         select: {
           id: true,
           title: true,
@@ -72,7 +72,7 @@ export default async function TaskReviewDetailPage({
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
                 <ClipboardCheck className="h-6 w-6 text-[#4F46E5]" />
-                {submission.task.title}
+                {submission.Task.title}
               </h2>
               <span
                 className={`px-4 py-2 rounded-full text-sm font-medium ${getStatusColor(
@@ -91,7 +91,7 @@ export default async function TaskReviewDetailPage({
                 <div className="flex items-center gap-2 text-gray-900">
                   <User size={18} />
                   <span className="font-semibold">
-                    {submission.student.name || submission.student.email || "N/A"}
+                    {submission.User.name || submission.User.email || "N/A"}
                   </span>
                 </div>
               </div>
@@ -100,7 +100,7 @@ export default async function TaskReviewDetailPage({
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Task Description
                 </label>
-                <p className="text-gray-700 whitespace-pre-wrap">{submission.task.description}</p>
+                <p className="text-gray-700 whitespace-pre-wrap">{submission.Task.description}</p>
               </div>
 
               {submission.answerText && (

@@ -6,16 +6,16 @@ import Link from "next/link";
 export default async function TaskReviewPage() {
   const session = await requireAdmin();
 
-  const submissions = await (prisma as any).taskSubmission.findMany({
+  const submissions = await prisma.taskSubmission.findMany({
     include: {
-      student: {
+      User: {
         select: {
           id: true,
           name: true,
           email: true,
         },
       },
-      task: {
+      Task: {
         select: {
           id: true,
           title: true,
@@ -52,9 +52,9 @@ export default async function TaskReviewPage() {
     }
   };
 
-  const pendingCount = submissions.filter((s: any) => s.status === "PENDING").length;
-  const acceptedCount = submissions.filter((s: any) => s.status === "ACCEPTED").length;
-  const rejectedCount = submissions.filter((s: any) => s.status === "REJECTED").length;
+  const pendingCount = submissions.filter((s) => s.status === "PENDING").length;
+  const acceptedCount = submissions.filter((s) => s.status === "ACCEPTED").length;
+  const rejectedCount = submissions.filter((s) => s.status === "REJECTED").length;
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -119,7 +119,7 @@ export default async function TaskReviewPage() {
           <div className="text-center py-12 text-gray-500">No task submissions yet</div>
         ) : (
           <div className="divide-y divide-gray-200">
-            {submissions.map((submission: any) => (
+            {submissions.map((submission) => (
               <Link
                 key={submission.id}
                 href={`/admin/tasks/review/${submission.id}`}
@@ -129,7 +129,7 @@ export default async function TaskReviewPage() {
                   <div className="flex-1">
                     <div className="flex items-center gap-3 mb-2">
                       <h3 className="text-lg font-semibold text-gray-900">
-                        {submission.task.title}
+                        {submission.Task.title}
                       </h3>
                       <span
                         className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(
@@ -141,11 +141,11 @@ export default async function TaskReviewPage() {
                       </span>
                     </div>
                     <p className="text-sm text-gray-600 mb-3 line-clamp-2">
-                      {submission.task.description}
+                      {submission.Task.description}
                     </p>
                     <div className="flex items-center gap-6 text-sm text-gray-500">
                       <span>
-                        Student: {submission.student.name || submission.student.email || "N/A"}
+                        Student: {submission.User.name || submission.User.email || "N/A"}
                       </span>
                       <span>
                         Submitted: {new Date(submission.createdAt).toLocaleDateString()}

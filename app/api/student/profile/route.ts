@@ -9,11 +9,20 @@ export async function POST(req: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
 
-    if (!session?.user) {
+    if (!session?.user?.email) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const userId = (session.user as any).id;
+    const user = await prisma.user.findUnique({
+      where: { email: session.user.email },
+      select: { id: true },
+    });
+
+    if (!user) {
+      return NextResponse.json({ error: "User not found" }, { status: 404 });
+    }
+
+    const userId = user.id;
     const { phone, programTrack } = await req.json();
 
     // Update user phone
@@ -37,8 +46,10 @@ export async function POST(req: NextRequest) {
     } else {
       await prisma.studentProfile.create({
         data: {
+          id: crypto.randomUUID(),
           userId,
           programTrack: programTrack || null,
+          updatedAt: new Date(),
         },
       });
     }

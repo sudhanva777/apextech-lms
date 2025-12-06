@@ -47,7 +47,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Get the submission
-    const submission = await (prisma as any).taskSubmission.findUnique({
+    const submission = await prisma.taskSubmission.findUnique({
       where: { id: submissionId },
     });
 
@@ -64,7 +64,7 @@ export async function POST(req: NextRequest) {
 
     // Update submission
     const newStatus = action === "accept" ? "ACCEPTED" : "REJECTED";
-    await (prisma as any).taskSubmission.update({
+    await prisma.taskSubmission.update({
       where: { id: submissionId },
       data: {
         status: newStatus,

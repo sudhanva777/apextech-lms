@@ -12,11 +12,20 @@ export async function POST(req: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
 
-    if (!session?.user) {
+    if (!session?.user?.email) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const userId = (session.user as any).id;
+    const user = await prisma.user.findUnique({
+      where: { email: session.user.email },
+      select: { id: true },
+    });
+
+    if (!user) {
+      return NextResponse.json({ error: "User not found" }, { status: 404 });
+    }
+
+    const userId = user.id;
 
     // Check if user already has a submission
     const existingSubmission = await prisma.projectSubmission.findFirst({
@@ -90,17 +99,20 @@ export async function POST(req: NextRequest) {
           fileUrl,
           status: "SUBMITTED",
           submittedAt: new Date(),
+          updatedAt: new Date(),
         },
       });
     } else {
       await prisma.projectSubmission.create({
         data: {
+          id: crypto.randomUUID(),
           userId,
           title,
           description,
           githubRepo: githubRepo || null,
           fileUrl,
           status: "SUBMITTED",
+          updatedAt: new Date(),
         },
       });
     }

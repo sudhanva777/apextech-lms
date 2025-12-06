@@ -54,7 +54,7 @@ export async function GET(req: NextRequest) {
         ],
       },
       include: {
-        sender: {
+        User_Message_senderIdToUser: {
           select: {
             id: true,
             name: true,

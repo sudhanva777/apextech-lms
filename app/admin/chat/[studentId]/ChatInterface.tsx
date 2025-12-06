@@ -9,7 +9,7 @@ interface Message {
   receiverId: string;
   content: string;
   createdAt: string;
-  sender: {
+  User_Message_senderIdToUser: {
     id: string;
     name: string | null;
   };

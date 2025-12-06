@@ -21,7 +21,7 @@ export default async function TasksPage() {
 
   const studentTasks = await prisma.studentTask.findMany({
     where: { userId: user.id },
-    include: { task: true },
+    include: { Task: true },
     orderBy: { createdAt: "desc" },
   });
 
@@ -38,7 +38,7 @@ export default async function TasksPage() {
 
   // Create a map for quick lookup
   const submissionMap = new Map(
-    taskSubmissions.map((sub: any) => [sub.taskId, sub])
+    taskSubmissions.map((sub) => [sub.taskId, sub])
   );
 
   return (
@@ -59,14 +59,14 @@ export default async function TasksPage() {
       ) : (
         <div className="space-y-6">
           {studentTasks.map((studentTask) => {
-            const submission: any = submissionMap.get(studentTask.taskId);
+            const submission = submissionMap.get(studentTask.taskId);
             const isAccepted = submission?.status === "ACCEPTED";
             const isRejected = submission?.status === "REJECTED";
             const isPending = submission?.status === "PENDING";
             const isCompleted = isAccepted || studentTask.status === "COMPLETED";
             const isOverdue =
-              studentTask.task.dueDate &&
-              new Date(studentTask.task.dueDate) < new Date() &&
+              studentTask.Task.dueDate &&
+              new Date(studentTask.Task.dueDate) < new Date() &&
               !isCompleted;
 
             return (
@@ -79,7 +79,7 @@ export default async function TasksPage() {
                     <div className="flex-1">
                       <div className="flex items-center gap-3 mb-2">
                         <h3 className="text-xl font-bold text-gray-900">
-                          {studentTask.task.title}
+                          {studentTask.Task.title}
                         </h3>
                         <span
                           className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${
@@ -103,20 +103,20 @@ export default async function TasksPage() {
                             : studentTask.status.replace("_", " ")}
                         </span>
                       </div>
-                      <p className="text-gray-600 mb-4">{studentTask.task.description}</p>
+                      <p className="text-gray-600 mb-4">{studentTask.Task.description}</p>
                       <div className="flex items-center gap-6 text-sm text-gray-500">
-                        {studentTask.task.dueDate && (
+                        {studentTask.Task.dueDate && (
                           <div className="flex items-center gap-2">
                             <Calendar size={16} />
                             <span>
-                              Due: {new Date(studentTask.task.dueDate).toLocaleDateString()}
+                              Due: {new Date(studentTask.Task.dueDate).toLocaleDateString()}
                             </span>
                           </div>
                         )}
-                        {studentTask.task.week && (
+                        {studentTask.Task.week && (
                           <div className="flex items-center gap-2">
                             <Clock size={16} />
-                            <span>Week {studentTask.task.week}</span>
+                            <span>Week {studentTask.Task.week}</span>
                           </div>
                         )}
                         {submission && (

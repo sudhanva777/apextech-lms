@@ -7,7 +7,7 @@ export default async function ProjectsPage() {
   const session = await requireAdmin();
 
   const submissions = await prisma.projectSubmission.findMany({
-    include: { user: true },
+    include: { User: true },
     orderBy: { createdAt: "desc" },
   });
 

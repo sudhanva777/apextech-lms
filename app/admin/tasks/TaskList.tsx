@@ -11,10 +11,10 @@ interface Task {
   description: string;
   week: number | null;
   dueDate: Date | null;
-  studentTasks: Array<{
+  StudentTask: Array<{
     id: string;
     status: string;
-    user: { id: string; name: string | null; email: string | null };
+    User: { id: string; name: string | null; email: string | null };
   }>;
 }
 
@@ -27,8 +27,8 @@ interface Student {
 interface StudentTask {
   id: string;
   status: string;
-  task: { id: string; title: string; week: number | null; dueDate: Date | null };
-  user: { id: string; name: string | null; email: string | null };
+  Task: { id: string; title: string; week: number | null; dueDate: Date | null };
+  User: { id: string; name: string | null; email: string | null };
 }
 
 interface TaskListProps {
@@ -157,17 +157,17 @@ export default function TaskList({ tasks, studentTasks, students, assignToUserId
             </div>
 
             {/* Assigned Students */}
-            {task.studentTasks.length > 0 && (
+            {task.StudentTask.length > 0 && (
               <div className="mt-3 pt-3 border-t border-gray-200">
                 <p className="text-xs font-medium text-gray-700 mb-2">Assigned to:</p>
                 <div className="flex flex-wrap gap-2">
-                  {task.studentTasks.map((st) => (
+                  {task.StudentTask.map((st) => (
                     <div
                       key={st.id}
                       className="flex items-center gap-2 px-3 py-1 bg-gray-50 rounded-lg text-sm"
                     >
                       <User size={14} />
-                      <span className="text-gray-700">{st.user.name || st.user.email}</span>
+                      <span className="text-gray-700">{st.User.name || st.User.email}</span>
                       <span
                         className={`px-2 py-0.5 rounded text-xs ${
                           st.status === "COMPLETED"
@@ -198,16 +198,16 @@ export default function TaskList({ tasks, studentTasks, students, assignToUserId
               >
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
-                    <h4 className="font-semibold text-gray-900">{st.task.title}</h4>
+                    <h4 className="font-semibold text-gray-900">{st.Task.title}</h4>
                     <p className="text-sm text-gray-600 mt-1">
-                      Student: {st.user.name || st.user.email}
+                      Student: {st.User.name || st.User.email}
                     </p>
                     <div className="flex items-center gap-4 text-xs text-gray-500 mt-2">
-                      {st.task.week && <span>Week {st.task.week}</span>}
-                      {st.task.dueDate && (
+                      {st.Task.week && <span>Week {st.Task.week}</span>}
+                      {st.Task.dueDate && (
                         <span className="flex items-center gap-1">
                           <Calendar size={12} />
-                          Due: {new Date(st.task.dueDate).toLocaleDateString()}
+                          Due: {new Date(st.Task.dueDate).toLocaleDateString()}
                         </span>
                       )}
                     </div>

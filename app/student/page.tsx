@@ -12,27 +12,27 @@ export default async function StudentDashboard() {
   const user = await prisma.user.findUnique({
     where: { email: session.user.email },
     include: {
-      studentProfile: true,
-      studentTasks: {
-        include: { task: true },
+      StudentProfile: true,
+      StudentTask: {
+        include: { Task: true },
       },
-      projectSubmissions: {
+      ProjectSubmission: {
         orderBy: { createdAt: "desc" },
         take: 1,
       },
-      taskSubmissions: true,
+      TaskSubmission: true,
     },
   });
 
   // Count completed tasks (ACCEPTED submissions)
-  const acceptedSubmissions = user?.taskSubmissions.filter(
+  const acceptedSubmissions = user?.TaskSubmission.filter(
     (s) => s.status === "ACCEPTED"
   ).length || 0;
   const completedTasks = acceptedSubmissions;
-  const totalTasks = user?.studentTasks.length || 0;
+  const totalTasks = user?.StudentTask.length || 0;
   const pendingTasks = totalTasks - acceptedSubmissions;
-  const rejectedTasks = user?.taskSubmissions.filter((s) => s.status === "REJECTED").length || 0;
-  const projectStatus = user?.projectSubmissions[0]?.status || "NOT_SUBMITTED";
+  const rejectedTasks = user?.TaskSubmission.filter((s) => s.status === "REJECTED").length || 0;
+  const projectStatus = user?.ProjectSubmission[0]?.status || "NOT_SUBMITTED";
 
   return (
     <div className="max-w-6xl mx-auto">
@@ -79,7 +79,7 @@ export default async function StudentDashboard() {
             <div>
               <p className="text-gray-600 text-sm mb-1">Program Track</p>
               <p className="text-lg font-bold text-gray-900">
-                {user?.studentProfile?.programTrack || "Not enrolled"}
+                {user?.StudentProfile?.programTrack || "Not enrolled"}
               </p>
             </div>
             <BookOpen className="h-12 w-12 text-[#6366F1]" />

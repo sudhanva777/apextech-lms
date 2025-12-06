@@ -30,7 +30,7 @@ export async function GET() {
     });
 
     // Transform to match the Message interface format
-    const messages = history.map((item: any) => ({
+    const messages = history.map((item) => ({
       role: item.role === "USER" ? "user" : "assistant",
       content: item.message,
     }));

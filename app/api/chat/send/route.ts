@@ -65,12 +65,13 @@ export async function POST(req: NextRequest) {
     // Create message
     const message = await prisma.message.create({
       data: {
+        id: crypto.randomUUID(),
         senderId,
         receiverId,
         content: content.trim(),
       },
       include: {
-        sender: {
+        User_Message_senderIdToUser: {
           select: {
             id: true,
             name: true,

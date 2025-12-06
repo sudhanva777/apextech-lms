@@ -7,7 +7,7 @@ export default async function StudentsPage() {
   const session = await requireAdmin();
 
   const users = await prisma.user.findMany({
-    include: { studentProfile: true },
+    include: { StudentProfile: true },
     orderBy: { createdAt: "desc" },
   });
 
@@ -84,7 +84,7 @@ export default async function StudentsPage() {
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="text-sm text-gray-600 flex items-center gap-2">
                       <BookOpen size={14} />
-                      {user.studentProfile?.programTrack || "Not enrolled"}
+                      {user.StudentProfile?.programTrack || "Not enrolled"}
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">

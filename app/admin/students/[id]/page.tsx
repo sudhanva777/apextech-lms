@@ -14,12 +14,12 @@ export default async function StudentDetailPage({
   const user = await prisma.user.findUnique({
     where: { id: params.id },
     include: {
-      studentProfile: true,
-      studentTasks: {
-        include: { task: true },
+      StudentProfile: true,
+      StudentTask: {
+        include: { Task: true },
         orderBy: { createdAt: "desc" },
       },
-      projectSubmissions: {
+      ProjectSubmission: {
         orderBy: { createdAt: "desc" },
       },
     },
@@ -29,8 +29,8 @@ export default async function StudentDetailPage({
     notFound();
   }
 
-  const completedTasks = user.studentTasks.filter((t) => t.status === "COMPLETED").length;
-  const totalTasks = user.studentTasks.length;
+  const completedTasks = user.StudentTask.filter((t) => t.status === "COMPLETED").length;
+  const totalTasks = user.StudentTask.length;
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -91,7 +91,7 @@ export default async function StudentDetailPage({
                   Program Track
                 </label>
                 <p className="text-gray-900 font-semibold">
-                  {user.studentProfile?.programTrack || "Not enrolled"}
+                  {user.StudentProfile?.programTrack || "Not enrolled"}
                 </p>
               </div>
             </div>
@@ -144,11 +144,11 @@ export default async function StudentDetailPage({
           <ClipboardList className="h-6 w-6 text-[#4F46E5]" />
           Assigned Tasks
         </h2>
-        {user.studentTasks.length === 0 ? (
+        {user.StudentTask.length === 0 ? (
           <p className="text-gray-500 text-center py-8">No tasks assigned yet</p>
         ) : (
           <div className="space-y-4">
-            {user.studentTasks.map((studentTask) => (
+            {user.StudentTask.map((studentTask) => (
               <div
                 key={studentTask.id}
                 className="p-4 border border-gray-200 rounded-lg hover:border-[#4F46E5] transition-colors"
@@ -156,16 +156,16 @@ export default async function StudentDetailPage({
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
                     <h3 className="font-semibold text-gray-900 mb-1">
-                      {studentTask.task.title}
+                      {studentTask.Task.title}
                     </h3>
-                    <p className="text-sm text-gray-600 mb-2">{studentTask.task.description}</p>
+                    <p className="text-sm text-gray-600 mb-2">{studentTask.Task.description}</p>
                     <div className="flex items-center gap-4 text-xs text-gray-500">
-                      {studentTask.task.dueDate && (
+                      {studentTask.Task.dueDate && (
                         <span>
-                          Due: {new Date(studentTask.task.dueDate).toLocaleDateString()}
+                          Due: {new Date(studentTask.Task.dueDate).toLocaleDateString()}
                         </span>
                       )}
-                      {studentTask.task.week && <span>Week {studentTask.task.week}</span>}
+                      {studentTask.Task.week && <span>Week {studentTask.Task.week}</span>}
                     </div>
                   </div>
                   <div className="flex items-center gap-3">
@@ -197,11 +197,11 @@ export default async function StudentDetailPage({
           <FolderKanban className="h-6 w-6 text-[#4F46E5]" />
           Project Submissions
         </h2>
-        {user.projectSubmissions.length === 0 ? (
+        {user.ProjectSubmission.length === 0 ? (
           <p className="text-gray-500 text-center py-8">No project submissions yet</p>
         ) : (
           <div className="space-y-4">
-            {user.projectSubmissions.map((submission) => (
+            {user.ProjectSubmission.map((submission) => (
               <Link
                 key={submission.id}
                 href={`/admin/projects/${submission.id}`}

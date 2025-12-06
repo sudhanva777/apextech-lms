@@ -41,7 +41,7 @@ export async function GET(req: NextRequest) {
     if (currentUser.role === "ADMIN" && !userId) {
       const allAttendance = await prisma.attendance.findMany({
         include: {
-          user: {
+          User: {
             select: {
               id: true,
               name: true,
@@ -58,7 +58,7 @@ export async function GET(req: NextRequest) {
     const attendance = await prisma.attendance.findMany({
       where: { userId: targetUserId },
       include: {
-        user: {
+        User: {
           select: {
             id: true,
             name: true,

@@ -70,9 +70,11 @@ export async function POST(req: NextRequest) {
     // Create assignment
     const studentTask = await prisma.studentTask.create({
       data: {
+        id: crypto.randomUUID(),
         userId,
         taskId,
         status: "PENDING",
+        updatedAt: new Date(),
       },
     });
 

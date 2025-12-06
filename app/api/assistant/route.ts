@@ -136,6 +136,7 @@ GLOBAL RULES (Both Roles):
     if (messageToSave) {
       await prisma.chatHistory.create({
         data: {
+          id: crypto.randomUUID(),
           userId: dbUser.id,
           role: "USER",
           message: messageToSave,
@@ -146,6 +147,7 @@ GLOBAL RULES (Both Roles):
     // Save assistant reply
     await prisma.chatHistory.create({
       data: {
+        id: crypto.randomUUID(),
         userId: dbUser.id,
         role: "ASSISTANT",
         message: text,

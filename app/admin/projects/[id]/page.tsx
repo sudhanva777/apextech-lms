@@ -14,7 +14,7 @@ export default async function ProjectReviewPage({
 
   const submission = await prisma.projectSubmission.findUnique({
     where: { id: params.id },
-    include: { user: true },
+    include: { User: true },
   });
 
   if (!submission) {
@@ -75,7 +75,7 @@ export default async function ProjectReviewPage({
                 <div className="flex items-center gap-2 text-gray-900">
                   <User size={18} />
                   <span className="font-semibold">
-                    {submission.user.name || submission.user.email || "N/A"}
+                    {submission.User.name || submission.User.email || "N/A"}
                   </span>
                 </div>
               </div>

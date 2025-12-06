@@ -10,7 +10,7 @@ export default async function AdminAttendancePage() {
   const students = await prisma.user.findMany({
     where: { role: "STUDENT" },
     include: {
-      attendances: {
+      Attendance: {
         orderBy: { date: "desc" },
       },
     },
@@ -19,8 +19,8 @@ export default async function AdminAttendancePage() {
 
   // Calculate statistics for each student
   const studentStats = students.map((student) => {
-    const totalDays = student.attendances.length;
-    const presentDays = student.attendances.filter((a) => a.status === "PRESENT").length;
+    const totalDays = student.Attendance.length;
+    const presentDays = student.Attendance.filter((a: { status: string }) => a.status === "PRESENT").length;
     const percentage = totalDays > 0 ? Math.round((presentDays / totalDays) * 100) : 0;
     return {
       ...student,

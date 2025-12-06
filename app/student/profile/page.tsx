@@ -12,7 +12,7 @@ export default async function ProfilePage() {
 
   const user = await prisma.user.findUnique({
     where: { email: session.user.email },
-    include: { studentProfile: true },
+    include: { StudentProfile: true },
   });
 
   if (!user) {
@@ -72,7 +72,7 @@ export default async function ProfilePage() {
                   Program Track
                 </label>
                 <p className="text-gray-900 font-semibold">
-                  {user.studentProfile?.programTrack || "Not enrolled"}
+                  {user.StudentProfile?.programTrack || "Not enrolled"}
                 </p>
               </div>
             </div>
@@ -89,7 +89,7 @@ export default async function ProfilePage() {
               </div>
             </div>
 
-            {user.studentProfile?.enrollmentDate && (
+            {user.StudentProfile?.enrollmentDate && (
               <div className="flex items-start gap-4">
                 <div className="p-3 bg-[#EEF2FF] rounded-lg">
                   <Calendar className="h-6 w-6 text-[#4F46E5]" />
@@ -99,7 +99,7 @@ export default async function ProfilePage() {
                     Enrollment Date
                   </label>
                   <p className="text-gray-900 font-semibold">
-                    {new Date(user.studentProfile.enrollmentDate).toLocaleDateString()}
+                    {new Date(user.StudentProfile.enrollmentDate).toLocaleDateString()}
                   </p>
                 </div>
               </div>
@@ -112,7 +112,7 @@ export default async function ProfilePage() {
           <h2 className="text-2xl font-bold text-gray-900 mb-6">Update Profile</h2>
           <ProfileForm
             initialPhone={user.phone || ""}
-            initialProgramTrack={user.studentProfile?.programTrack || ""}
+            initialProgramTrack={user.StudentProfile?.programTrack || ""}
           />
         </div>
       </div>
