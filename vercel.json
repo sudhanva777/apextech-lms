@@ -1,0 +1,9 @@
+{
+    "functions": {
+      "api/**/*": {
+        "maxDuration": 30
+      }
+    },
+    "buildCommand": "npm install && npx prisma generate && npm run build"
+  }
+  
