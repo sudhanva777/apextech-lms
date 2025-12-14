@@ -16,8 +16,6 @@ export const authOptions: NextAuthOptions = {
     signIn: "/auth/login",
   },
   debug: process.env.NODE_ENV === "development",
-  // Ensure proper URL handling for production
-  trustHost: true,
   providers: [
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID!,
@@ -54,35 +52,41 @@ export const authOptions: NextAuthOptions = {
           return null;
         }
 
+        // Hard guard: email MUST be a string (required by NextAuth User type)
+        if (!user.email) {
+          return null;
+        }
+
+        // Return ONLY valid NextAuth User fields (no custom fields like role)
         return {
           id: user.id,
-          email: user.email,
-          name: user.name,
-          role: user.role,
+          email: user.email, // Guaranteed to be string
+          name: user.name ?? null, // NextAuth User.name is string | null
         };
       },
     }),
   ],
   callbacks: {
     async jwt({ token, user, account }) {
-      // Initial sign in
+      // Initial sign in - fetch role from database
       if (user) {
-        token.id = (user as any).id;
-        token.role = (user as any).role ?? "STUDENT";
+        token.id = user.id;
+        
+        // Fetch user from DB to get role (for both credentials and OAuth)
+        const dbUser = await prisma.user.findUnique({
+          where: { email: user.email ?? "" },
+        });
+        
+        if (dbUser) {
+          token.role = (dbUser.role as "STUDENT" | "ADMIN") ?? "STUDENT";
+        } else {
+          token.role = "STUDENT"; // Default fallback
+        }
+        
         return token;
       }
 
-      // For Google OAuth - fetch user from DB to get role
-      if (account && account.provider === "google") {
-        const dbUser = await prisma.user.findUnique({
-          where: { email: token.email ?? "" },
-        });
-        if (dbUser) {
-          token.id = dbUser.id;
-          token.role = dbUser.role ?? "STUDENT";
-        }
-      }
-
+      // For subsequent requests, role is already in token
       return token;
     },
     async session({ session, token }) {
