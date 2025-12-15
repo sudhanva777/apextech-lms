@@ -79,14 +79,14 @@ export default function Program() {
         <RadialGlowBackground />
         <div className="container-custom relative z-10">
           <div className="max-w-4xl mx-auto text-center">
-            <h1 className="text-5xl md:text-6xl lg:text-7xl font-extrabold tracking-tight text-gray-900 mb-6">
-              Data Science{" "}
-              <span className="gradient-text">
-                Training Program
+            <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold tracking-tight text-slate-900 dark:text-white mb-4">
+              Apex Tech Innovation{" "}
+              <span className="text-indigo-600 dark:text-indigo-400">
+                Training Programs
               </span>
             </h1>
-            <p className="text-lg md:text-xl text-gray-600 leading-relaxed">
-              Our program is beginner-friendly and focuses on practical skill-building through tasks, hands-on exercises, and one major project.
+            <p className="text-lg md:text-xl text-slate-600 dark:text-slate-400 leading-relaxed">
+              Building industry-ready tech talent across Data Science, AI Engineering, ML, and Full-Stack Systems. Beginner-friendly, practical, and job-oriented.
             </p>
           </div>
         </div>
@@ -95,11 +95,11 @@ export default function Program() {
       {/* What You Will Learn */}
       <section className="section-padding bg-white">
         <div className="container-custom">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+          <div className="text-center mb-8">
+            <h2 className="text-3xl md:text-4xl font-bold text-slate-900 dark:text-white mb-3">
               What You Will Learn
             </h2>
-            <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+            <p className="text-lg text-slate-600 dark:text-slate-400 max-w-2xl mx-auto">
               Comprehensive curriculum designed for real-world application
             </p>
           </div>

@@ -2,8 +2,10 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
-import { Users, ClipboardCheck, FolderKanban, DollarSign, CheckCircle, Clock, AlertCircle } from "lucide-react";
+import { Users, ClipboardCheck, FolderKanban, CheckCircle, Clock, AlertCircle, TrendingUp, UserCheck } from "lucide-react";
 import Link from "next/link";
+import Avatar from "@/components/Avatar";
+import { AdminDashboardClient, StudentsList } from "./DashboardClient";
 
 export default async function AdminDashboard() {
   const session = await getServerSession(authOptions);
@@ -15,6 +17,7 @@ export default async function AdminDashboard() {
   // Fetch all statistics
   const [
     totalStudents,
+    activeInterns,
     totalTasks,
     completedTasks,
     pendingTasks,
@@ -29,8 +32,17 @@ export default async function AdminDashboard() {
     recentStudents,
     recentSubmissions,
     recentTasks,
+    submissionsToday,
   ] = await Promise.all([
     prisma.user.count({ where: { role: "STUDENT" } }),
+    prisma.user.count({
+      where: {
+        role: "STUDENT",
+        StudentProfile: {
+          status: "ACTIVE",
+        },
+      },
+    }),
     prisma.task.count(),
     prisma.studentTask.count({ where: { status: "COMPLETED" } }),
     prisma.studentTask.count({ where: { status: "PENDING" } }),
@@ -45,15 +57,17 @@ export default async function AdminDashboard() {
     prisma.user.findMany({
       where: { role: "STUDENT" },
       orderBy: { createdAt: "desc" },
-      take: 5,
+      take: 8,
       select: {
         id: true,
         name: true,
         email: true,
+        image: true,
         createdAt: true,
         StudentProfile: {
           select: {
             programTrack: true,
+            status: true,
           },
         },
       },
@@ -65,9 +79,12 @@ export default async function AdminDashboard() {
         id: true,
         title: true,
         status: true,
+        createdAt: true,
         User: {
           select: {
+            id: true,
             name: true,
+            image: true,
           },
         },
       },
@@ -85,269 +102,292 @@ export default async function AdminDashboard() {
         },
         User: {
           select: {
+            id: true,
             name: true,
+            image: true,
           },
+        },
+      },
+    }),
+    prisma.taskSubmission.count({
+      where: {
+        createdAt: {
+          gte: new Date(new Date().setHours(0, 0, 0, 0)),
         },
       },
     }),
   ]);
 
+  const pendingReviews = pendingProjectSubmissions + pendingTaskSubmissions;
+
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <div className="mb-8">
-        <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight text-gray-900 dark:text-white mb-2">
-          Admin <span className="gradient-text">Dashboard</span>
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+      {/* Header */}
+      <div className="mb-6">
+        <h1 className="text-3xl md:text-4xl font-extrabold text-slate-900 dark:text-white mb-1">
+          Admin Dashboard
         </h1>
-        <p className="text-gray-600 dark:text-gray-400">Manage students, tasks, projects, and payments</p>
+        <p className="text-slate-600 dark:text-slate-400">Overview of students, tasks, and submissions</p>
       </div>
 
-      {/* KPI Cards */}
-      <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        <div className="bg-white dark:bg-slate-800 rounded-2xl border border-gray-100 dark:border-slate-700 shadow-lg p-6 hover:shadow-xl transition-all">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-gray-600 dark:text-gray-400 text-sm mb-1">Total Students</p>
-              <p className="text-3xl font-bold text-gray-900 dark:text-white">{totalStudents}</p>
-            </div>
-            <Users className="h-12 w-12 text-[#4F46E5]" />
-          </div>
-        </div>
-
-        <div className="bg-white dark:bg-slate-800 rounded-2xl border border-gray-100 dark:border-slate-700 shadow-lg p-6 hover:shadow-xl transition-all">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-gray-600 dark:text-gray-400 text-sm mb-1">Total Tasks</p>
-              <p className="text-3xl font-bold text-gray-900 dark:text-white">{totalTasks}</p>
-            </div>
-            <ClipboardCheck className="h-12 w-12 text-[#6366F1]" />
-          </div>
-        </div>
-
-        <div className="bg-white dark:bg-slate-800 rounded-2xl border border-gray-100 dark:border-slate-700 shadow-lg p-6 hover:shadow-xl transition-all">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-gray-600 dark:text-gray-400 text-sm mb-1">Completed Tasks</p>
-              <p className="text-3xl font-bold text-gray-900 dark:text-white">{completedTasks}</p>
-            </div>
-            <CheckCircle className="h-12 w-12 text-green-500" />
-          </div>
-        </div>
-
-        <div className="bg-white dark:bg-slate-800 rounded-2xl border border-gray-100 dark:border-slate-700 shadow-lg p-6 hover:shadow-xl transition-all">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-gray-600 dark:text-gray-400 text-sm mb-1">Pending Tasks</p>
-              <p className="text-3xl font-bold text-gray-900 dark:text-white">{pendingTasks}</p>
-            </div>
-            <Clock className="h-12 w-12 text-yellow-500" />
-          </div>
-        </div>
+      {/* KPI Row - 4 Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        <AdminKPICard
+          icon={Users}
+          label="Total Students"
+          value={totalStudents}
+          trend={null}
+          gradient="from-indigo-500/10 to-indigo-600/5"
+          iconColor="text-indigo-600 dark:text-indigo-400"
+          iconBg="bg-indigo-100 dark:bg-indigo-900/30"
+        />
+        <AdminKPICard
+          icon={UserCheck}
+          label="Active Interns"
+          value={activeInterns}
+          trend={null}
+          gradient="from-green-500/10 to-green-600/5"
+          iconColor="text-green-600 dark:text-green-400"
+          iconBg="bg-green-100 dark:bg-green-900/30"
+        />
+        <AdminKPICard
+          icon={Clock}
+          label="Pending Reviews"
+          value={pendingReviews}
+          trend={null}
+          gradient="from-yellow-500/10 to-yellow-600/5"
+          iconColor="text-yellow-600 dark:text-yellow-400"
+          iconBg="bg-yellow-100 dark:bg-yellow-900/30"
+        />
+        <AdminKPICard
+          icon={TrendingUp}
+          label="Submissions Today"
+          value={submissionsToday}
+          trend={null}
+          gradient="from-blue-500/10 to-blue-600/5"
+          iconColor="text-blue-600 dark:text-blue-400"
+          iconBg="bg-blue-100 dark:bg-blue-900/30"
+        />
       </div>
 
-      {/* Project Submissions Summary */}
-      <div className="grid md:grid-cols-4 gap-6 mb-8">
-        <div className="bg-white dark:bg-slate-800 rounded-2xl border border-gray-100 dark:border-slate-700 shadow-lg p-6 hover:shadow-xl transition-all">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-gray-600 dark:text-gray-400 text-sm mb-1">Total Submissions</p>
-              <p className="text-3xl font-bold text-gray-900 dark:text-white">{totalProjectSubmissions}</p>
+      {/* Main Grid - 2 Columns */}
+      <div className="grid lg:grid-cols-3 gap-6">
+        {/* LEFT COLUMN - Student List */}
+        <div className="lg:col-span-2 space-y-6">
+          {/* Students List */}
+          <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden">
+            <div className="px-6 py-4 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between">
+              <h2 className="text-lg font-bold text-slate-900 dark:text-white">Recent Students</h2>
+              <Link
+                href="/admin/students"
+                className="text-sm text-indigo-600 dark:text-indigo-400 hover:underline font-medium"
+              >
+                View All →
+              </Link>
             </div>
-            <FolderKanban className="h-12 w-12 text-[#4F46E5]" />
-          </div>
-        </div>
-
-        <div className="bg-white dark:bg-slate-800 rounded-2xl border border-gray-100 dark:border-slate-700 shadow-lg p-6 hover:shadow-xl transition-all">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-gray-600 dark:text-gray-400 text-sm mb-1">Pending Review</p>
-              <p className="text-3xl font-bold text-gray-900 dark:text-white">{pendingProjectSubmissions}</p>
-            </div>
-            <Clock className="h-12 w-12 text-yellow-500" />
-          </div>
-        </div>
-
-        <div className="bg-white dark:bg-slate-800 rounded-2xl border border-gray-100 dark:border-slate-700 shadow-lg p-6 hover:shadow-xl transition-all">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-gray-600 dark:text-gray-400 text-sm mb-1">Accepted</p>
-              <p className="text-3xl font-bold text-gray-900 dark:text-white">{acceptedProjectSubmissions}</p>
-            </div>
-            <CheckCircle className="h-12 w-12 text-green-500" />
-          </div>
-        </div>
-
-        <div className="bg-white dark:bg-slate-800 rounded-2xl border border-gray-100 dark:border-slate-700 shadow-lg p-6 hover:shadow-xl transition-all">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-gray-600 dark:text-gray-400 text-sm mb-1">Rejected</p>
-              <p className="text-3xl font-bold text-gray-900 dark:text-white">{rejectedProjectSubmissions}</p>
-            </div>
-            <AlertCircle className="h-12 w-12 text-red-500" />
-          </div>
-        </div>
-      </div>
-
-      {/* Task Submission Stats */}
-      <div className="grid md:grid-cols-4 gap-6 mb-8">
-        <div className="bg-white dark:bg-slate-800 rounded-2xl border border-gray-100 dark:border-slate-700 shadow-lg p-6 hover:shadow-xl transition-all">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-gray-600 dark:text-gray-400 text-sm mb-1">Total Task Submissions</p>
-              <p className="text-3xl font-bold text-gray-900 dark:text-white">{totalTaskSubmissions}</p>
-            </div>
-            <ClipboardCheck className="h-12 w-12 text-[#4F46E5]" />
-          </div>
-        </div>
-
-        <div className="bg-white dark:bg-slate-800 rounded-2xl border border-gray-100 dark:border-slate-700 shadow-lg p-6 hover:shadow-xl transition-all">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-gray-600 dark:text-gray-400 text-sm mb-1">Pending Task Review</p>
-              <p className="text-3xl font-bold text-gray-900 dark:text-white">{pendingTaskSubmissions}</p>
-            </div>
-            <Clock className="h-12 w-12 text-yellow-500" />
-          </div>
-        </div>
-
-        <div className="bg-white dark:bg-slate-800 rounded-2xl border border-gray-100 dark:border-slate-700 shadow-lg p-6 hover:shadow-xl transition-all">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-gray-600 dark:text-gray-400 text-sm mb-1">Accepted Tasks</p>
-              <p className="text-3xl font-bold text-gray-900 dark:text-white">{acceptedTaskSubmissions}</p>
-            </div>
-            <CheckCircle className="h-12 w-12 text-green-500" />
-          </div>
-        </div>
-
-        <div className="bg-white dark:bg-slate-800 rounded-2xl border border-gray-100 dark:border-slate-700 shadow-lg p-6 hover:shadow-xl transition-all">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-gray-600 dark:text-gray-400 text-sm mb-1">Rejected Tasks</p>
-              <p className="text-3xl font-bold text-gray-900 dark:text-white">{rejectedTaskSubmissions}</p>
-            </div>
-            <AlertCircle className="h-12 w-12 text-red-500" />
-          </div>
-        </div>
-      </div>
-
-      {/* Recent Activity */}
-      <div className="grid md:grid-cols-3 gap-6">
-        {/* Latest Students */}
-        <div className="bg-white dark:bg-slate-800 rounded-2xl border border-gray-100 dark:border-slate-700 shadow-lg overflow-hidden">
-          <div className="px-6 py-4 border-b border-gray-200 dark:border-slate-700">
-            <h2 className="text-xl font-bold text-gray-900 dark:text-white">Latest Students</h2>
-          </div>
-          <div className="p-6">
-            {recentStudents.length === 0 ? (
-              <p className="text-gray-500 dark:text-gray-400 text-sm">No students yet</p>
-            ) : (
-              <div className="space-y-4">
-                {recentStudents.map((student: { id: string; name: string | null; email: string | null; createdAt: Date; StudentProfile: { programTrack: string | null } | null }) => (
+            <div className="divide-y divide-slate-200 dark:divide-slate-700">
+              {recentStudents.length === 0 ? (
+                <div className="px-6 py-8 text-center text-slate-500 dark:text-slate-400 text-sm">
+                  No students yet
+                </div>
+              ) : (
+                recentStudents.map((student) => (
                   <Link
                     key={student.id}
                     href={`/admin/students/${student.id}`}
-                    className="block p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors"
+                    className="group block px-6 py-4 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors"
                   >
-                    <p className="font-semibold text-gray-900 dark:text-white">{student.name || "N/A"}</p>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">{student.email}</p>
-                    <p className="text-xs text-gray-500 dark:text-gray-500 mt-1">
-                      {new Date(student.createdAt).toLocaleDateString()}
-                    </p>
+                    <div className="flex items-center gap-4">
+                      <Avatar
+                        src={student.image}
+                        name={student.name}
+                        size="md"
+                      />
+                      <div className="flex-1 min-w-0">
+                        <p className="font-semibold text-slate-900 dark:text-white truncate">
+                          {student.name || "N/A"}
+                        </p>
+                        <p className="text-sm text-slate-600 dark:text-slate-400 truncate">
+                          {student.email}
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span
+                          className={`px-2 py-1 rounded-full text-xs font-medium ${
+                            student.StudentProfile?.status === "ACTIVE"
+                              ? "bg-green-100 text-green-700 dark:bg-green-900/20 dark:text-green-300"
+                              : "bg-slate-100 text-slate-700 dark:bg-slate-700 dark:text-slate-300"
+                          }`}
+                        >
+                          {student.StudentProfile?.status || "INACTIVE"}
+                        </span>
+                      </div>
+                    </div>
                   </Link>
-                ))}
-              </div>
-            )}
-            <Link
-              href="/admin/students"
-              className="mt-4 block text-center text-[#4F46E5] dark:text-indigo-400 hover:underline text-sm font-medium"
-            >
-              View All Students →
-            </Link>
+                ))
+              )}
+            </div>
           </div>
-        </div>
 
-        {/* Latest Submissions */}
-        <div className="bg-white dark:bg-slate-800 rounded-2xl border border-gray-100 dark:border-slate-700 shadow-lg overflow-hidden">
-          <div className="px-6 py-4 border-b border-gray-200 dark:border-slate-700">
-            <h2 className="text-xl font-bold text-gray-900 dark:text-white">Latest Submissions</h2>
-          </div>
-          <div className="p-6">
-            {recentSubmissions.length === 0 ? (
-              <p className="text-gray-500 dark:text-gray-400 text-sm">No submissions yet</p>
-            ) : (
-              <div className="space-y-4">
-                {recentSubmissions.map((submission: { id: string; title: string; status: string; User: { name: string | null } }) => (
+          {/* Recent Submissions */}
+          <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden">
+            <div className="px-6 py-4 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between">
+              <h2 className="text-lg font-bold text-slate-900 dark:text-white">Recent Submissions</h2>
+              <Link
+                href="/admin/projects"
+                className="text-sm text-indigo-600 dark:text-indigo-400 hover:underline font-medium"
+              >
+                View All →
+              </Link>
+            </div>
+            <div className="divide-y divide-slate-200 dark:divide-slate-700">
+              {recentSubmissions.length === 0 ? (
+                <div className="px-6 py-8 text-center text-slate-500 dark:text-slate-400 text-sm">
+                  No submissions yet
+                </div>
+              ) : (
+                recentSubmissions.map((submission) => (
                   <Link
                     key={submission.id}
                     href={`/admin/projects/${submission.id}`}
-                    className="block p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors"
+                    className="group block px-6 py-4 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors"
                   >
-                    <p className="font-semibold text-gray-900 dark:text-white truncate">{submission.title}</p>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">{submission.User.name || "N/A"}</p>
-                    <span
-                      className={`inline-block mt-1 px-2 py-0.5 rounded text-xs font-medium ${
-                        submission.status === "APPROVED"
-                          ? "bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300"
-                          : submission.status === "REJECTED"
-                          ? "bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300"
-                          : "bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300"
-                      }`}
-                    >
-                      {submission.status.replace("_", " ")}
-                    </span>
+                    <div className="flex items-center gap-4">
+                      <Avatar
+                        src={submission.User.image}
+                        name={submission.User.name}
+                        size="md"
+                      />
+                      <div className="flex-1 min-w-0">
+                        <p className="font-semibold text-slate-900 dark:text-white truncate">
+                          {submission.title}
+                        </p>
+                        <p className="text-sm text-slate-600 dark:text-slate-400">
+                          {submission.User.name || "N/A"}
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <span
+                          className={`px-2 py-1 rounded-full text-xs font-medium ${
+                            submission.status === "APPROVED"
+                              ? "bg-green-100 text-green-700 dark:bg-green-900/20 dark:text-green-300"
+                              : submission.status === "REJECTED"
+                              ? "bg-red-100 text-red-700 dark:bg-red-900/20 dark:text-red-300"
+                              : "bg-blue-100 text-blue-700 dark:bg-blue-900/20 dark:text-blue-300"
+                          }`}
+                        >
+                          {submission.status.replace("_", " ")}
+                        </span>
+                      </div>
+                    </div>
                   </Link>
-                ))}
-              </div>
-            )}
-            <Link
-              href="/admin/projects"
-              className="mt-4 block text-center text-[#4F46E5] dark:text-indigo-400 hover:underline text-sm font-medium"
-            >
-              View All Projects →
-            </Link>
+                ))
+              )}
+            </div>
           </div>
         </div>
 
-        {/* Latest Tasks Assigned */}
-        <div className="bg-white dark:bg-slate-800 rounded-2xl border border-gray-100 dark:border-slate-700 shadow-lg overflow-hidden">
-          <div className="px-6 py-4 border-b border-gray-200 dark:border-slate-700">
-            <h2 className="text-xl font-bold text-gray-900 dark:text-white">Recent Task Assignments</h2>
-          </div>
-          <div className="p-6">
-            {recentTasks.length === 0 ? (
-              <p className="text-gray-500 dark:text-gray-400 text-sm">No tasks assigned yet</p>
-            ) : (
-              <div className="space-y-4">
-                {recentTasks.map((studentTask: { id: string; status: string; Task: { title: string }; User: { name: string | null } }) => (
-                  <div key={studentTask.id} className="p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors">
-                    <p className="font-semibold text-gray-900 dark:text-white truncate">
-                      {studentTask.Task.title}
-                    </p>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">
-                      {studentTask.User.name || "N/A"}
-                    </p>
-                    <span
-                      className={`inline-block mt-1 px-2 py-0.5 rounded text-xs font-medium ${
-                        studentTask.status === "COMPLETED"
-                          ? "bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300"
-                          : "bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300"
-                      }`}
-                    >
-                      {studentTask.status}
-                    </span>
-                  </div>
-                ))}
+        {/* RIGHT COLUMN - Stats & Quick Actions */}
+        <div className="space-y-6">
+          {/* Quick Stats */}
+          <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm p-6">
+            <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-4">Quick Stats</h3>
+            <div className="space-y-3">
+              <div className="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-900/50 rounded-lg">
+                <span className="text-sm text-slate-600 dark:text-slate-400">Total Tasks</span>
+                <span className="font-bold text-slate-900 dark:text-white">{totalTasks}</span>
               </div>
-            )}
-            <Link
-              href="/admin/tasks"
-              className="mt-4 block text-center text-[#4F46E5] dark:text-indigo-400 hover:underline text-sm font-medium"
-            >
-              Manage Tasks →
-            </Link>
+              <div className="flex items-center justify-between p-3 bg-green-50 dark:bg-green-900/10 rounded-lg">
+                <span className="text-sm text-slate-600 dark:text-slate-400">Completed</span>
+                <span className="font-bold text-green-600 dark:text-green-400">{completedTasks}</span>
+              </div>
+              <div className="flex items-center justify-between p-3 bg-yellow-50 dark:bg-yellow-900/10 rounded-lg">
+                <span className="text-sm text-slate-600 dark:text-slate-400">Pending</span>
+                <span className="font-bold text-yellow-600 dark:text-yellow-400">{pendingTasks}</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Project Stats */}
+          <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm p-6">
+            <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-4">Project Stats</h3>
+            <div className="space-y-3">
+              <div className="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-900/50 rounded-lg">
+                <span className="text-sm text-slate-600 dark:text-slate-400">Total</span>
+                <span className="font-bold text-slate-900 dark:text-white">{totalProjectSubmissions}</span>
+              </div>
+              <div className="flex items-center justify-between p-3 bg-blue-50 dark:bg-blue-900/10 rounded-lg">
+                <span className="text-sm text-slate-600 dark:text-slate-400">Pending</span>
+                <span className="font-bold text-blue-600 dark:text-blue-400">{pendingProjectSubmissions}</span>
+              </div>
+              <div className="flex items-center justify-between p-3 bg-green-50 dark:bg-green-900/10 rounded-lg">
+                <span className="text-sm text-slate-600 dark:text-slate-400">Approved</span>
+                <span className="font-bold text-green-600 dark:text-green-400">{acceptedProjectSubmissions}</span>
+              </div>
+              <div className="flex items-center justify-between p-3 bg-red-50 dark:bg-red-900/10 rounded-lg">
+                <span className="text-sm text-slate-600 dark:text-slate-400">Rejected</span>
+                <span className="font-bold text-red-600 dark:text-red-400">{rejectedProjectSubmissions}</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Quick Actions */}
+          <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm p-6">
+            <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-4">Quick Actions</h3>
+            <div className="space-y-2">
+              <Link
+                href="/admin/tasks"
+                className="block w-full px-4 py-2 text-sm font-medium text-slate-700 dark:text-slate-300 bg-slate-50 dark:bg-slate-900/50 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors text-left"
+              >
+                Manage Tasks
+              </Link>
+              <Link
+                href="/admin/tasks/review"
+                className="block w-full px-4 py-2 text-sm font-medium text-slate-700 dark:text-slate-300 bg-slate-50 dark:bg-slate-900/50 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors text-left"
+              >
+                Review Submissions
+              </Link>
+              <Link
+                href="/admin/students"
+                className="block w-full px-4 py-2 text-sm font-medium text-slate-700 dark:text-slate-300 bg-slate-50 dark:bg-slate-900/50 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors text-left"
+              >
+                View All Students
+              </Link>
+            </div>
           </div>
         </div>
       </div>
+    </div>
+  );
+}
+
+// KPI Card Component
+function AdminKPICard({
+  icon: Icon,
+  label,
+  value,
+  trend,
+  gradient,
+  iconColor,
+  iconBg,
+}: {
+  icon: React.ComponentType<{ className?: string }>;
+  label: string;
+  value: number;
+  trend: number | null;
+  gradient: string;
+  iconColor: string;
+  iconBg: string;
+}) {
+  return (
+    <div className={`group bg-gradient-to-br ${gradient} rounded-2xl border border-slate-200 dark:border-slate-700 p-5 shadow-sm hover:shadow-md transition-all`}>
+      <div className="flex items-center justify-between mb-3">
+        <div className={`p-2 ${iconBg} rounded-lg`}>
+          <Icon className={`h-5 w-5 ${iconColor}`} />
+        </div>
+      </div>
+      <p className="text-sm text-slate-600 dark:text-slate-400 mb-1">{label}</p>
+      <AdminDashboardClient initialValue={value} />
     </div>
   );
 }

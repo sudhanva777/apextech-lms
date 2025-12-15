@@ -2,8 +2,9 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
-import { Users, Eye, ClipboardList, Mail, Phone, Calendar, BookOpen } from "lucide-react";
+import { Users, Eye, ClipboardList } from "lucide-react";
 import Link from "next/link";
+import Avatar from "@/components/Avatar";
 
 export default async function StudentsPage() {
   const session = await getServerSession(authOptions);
@@ -13,120 +14,147 @@ export default async function StudentsPage() {
   if (user.role !== "ADMIN") redirect("/student");
 
   const users = await prisma.user.findMany({
-    include: { StudentProfile: true },
+    where: { role: "STUDENT" },
+    select: {
+      id: true,
+      name: true,
+      email: true,
+      phone: true,
+      image: true,
+      createdAt: true,
+      StudentProfile: {
+        select: {
+          programTrack: true,
+          status: true,
+        },
+      },
+    },
     orderBy: { createdAt: "desc" },
   });
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <div className="mb-8">
-        <h1 className="text-4xl font-extrabold text-gray-900 mb-2">Student Management</h1>
-        <p className="text-gray-600">View and manage all registered students</p>
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+      <div className="mb-6">
+        <h1 className="text-3xl md:text-4xl font-extrabold text-slate-900 dark:text-white mb-1">
+          Student Management
+        </h1>
+        <p className="text-slate-600 dark:text-slate-400">View and manage all registered students</p>
       </div>
 
-      <div className="bg-white rounded-2xl border border-gray-100 shadow-lg overflow-hidden">
-        <div className="px-6 py-4 border-b border-gray-200">
-          <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-            <Users className="h-6 w-6 text-[#4F46E5]" />
-            All Students ({users.filter((u) => u.role === "STUDENT").length})
+      <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden">
+        <div className="px-6 py-4 border-b border-slate-200 dark:border-slate-700">
+          <h2 className="text-xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
+            <Users className="h-5 w-5 text-indigo-600 dark:text-indigo-400" />
+            All Students ({users.length})
           </h2>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full">
-            <thead className="bg-gray-50">
+            <thead className="bg-slate-50 dark:bg-slate-900/50">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
-                  Name
+                <th className="px-6 py-3 text-left text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
+                  Student
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
                   Email
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
-                  Phone
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
-                  Role
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
                   Program Track
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
+                  Status
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
                   Joined
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
                   Actions
                 </th>
               </tr>
             </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {users.map((user) => (
-                <tr key={user.id} className="hover:bg-gray-50 transition-colors">
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm font-medium text-gray-900">{user.name || "N/A"}</div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-600 flex items-center gap-2">
-                      <Mail size={14} />
-                      {user.email || "N/A"}
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-600 flex items-center gap-2">
-                      <Phone size={14} />
-                      {user.phone || "N/A"}
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span
-                      className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                        user.role === "ADMIN"
-                          ? "bg-purple-100 text-purple-800"
-                          : "bg-indigo-100 text-indigo-800"
-                      }`}
-                    >
-                      {user.role}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-600 flex items-center gap-2">
-                      <BookOpen size={14} />
-                      {user.StudentProfile?.programTrack || "Not enrolled"}
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-600 flex items-center gap-2">
-                      <Calendar size={14} />
-                      {new Date(user.createdAt).toLocaleDateString()}
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                    <div className="flex items-center gap-3">
-                      <Link
-                        href={`/admin/students/${user.id}`}
-                        className="text-[#4F46E5] hover:text-[#4338ca] flex items-center gap-1"
-                      >
-                        <Eye size={16} />
-                        View Profile
-                      </Link>
-                      <Link
-                        href={`/admin/tasks?assignTo=${user.id}`}
-                        className="text-[#6366F1] hover:text-[#4F46E5] flex items-center gap-1"
-                      >
-                        <ClipboardList size={16} />
-                        Assign Task
-                      </Link>
-                    </div>
+            <tbody className="bg-white dark:bg-slate-800 divide-y divide-slate-200 dark:divide-slate-700">
+              {users.length === 0 ? (
+                <tr>
+                  <td colSpan={6} className="px-6 py-12 text-center text-slate-500 dark:text-slate-400">
+                    No students found
                   </td>
                 </tr>
-              ))}
+              ) : (
+                users.map((student) => (
+                  <tr
+                    key={student.id}
+                    className="hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors"
+                  >
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="flex items-center gap-3">
+                        <Avatar
+                          src={student.image}
+                          name={student.name}
+                          size="sm"
+                        />
+                        <div>
+                          <div className="text-sm font-semibold text-slate-900 dark:text-white">
+                            {student.name || "N/A"}
+                          </div>
+                          {student.phone && (
+                            <div className="text-xs text-slate-500 dark:text-slate-400">
+                              {student.phone}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm text-slate-600 dark:text-slate-400">
+                        {student.email || "N/A"}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm text-slate-600 dark:text-slate-400">
+                        {student.StudentProfile?.programTrack || "Not enrolled"}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span
+                        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                          student.StudentProfile?.status === "ACTIVE"
+                            ? "bg-green-100 text-green-700 dark:bg-green-900/20 dark:text-green-300"
+                            : "bg-slate-100 text-slate-700 dark:bg-slate-700 dark:text-slate-300"
+                        }`}
+                      >
+                        {student.StudentProfile?.status || "INACTIVE"}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm text-slate-600 dark:text-slate-400">
+                        {new Date(student.createdAt).toLocaleDateString()}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                      <div className="flex items-center gap-3">
+                        <Link
+                          href={`/admin/students/${student.id}`}
+                          className="text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 flex items-center gap-1 transition-colors"
+                        >
+                          <Eye size={16} />
+                          View
+                        </Link>
+                        <Link
+                          href={`/admin/tasks?assignTo=${student.id}`}
+                          className="text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 flex items-center gap-1 transition-colors"
+                        >
+                          <ClipboardList size={16} />
+                          Assign
+                        </Link>
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>
-        {users.length === 0 && (
-          <div className="text-center py-12 text-gray-500">No users found</div>
-        )}
       </div>
     </div>
   );
 }
-

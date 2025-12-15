@@ -1,103 +1,141 @@
 "use client";
 
-import { memo } from "react";
+import { memo, useState, useEffect } from "react";
 import Link from "next/link";
-import { Download, Phone, School, UserCheck, FolderKanban, BadgeCheck, ArrowRight } from "lucide-react";
-import { motion } from "framer-motion";
+import { Download, Phone, ArrowRight, Sparkles } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+
+const rotatingKeywords = [
+  "Data Science",
+  "Machine Learning",
+  "AI Engineering",
+  "Full-Stack Systems",
+];
 
 function Hero() {
-  const highlights = [
-    { text: "100% Practical Learning", icon: School },
-    { text: "Beginner Friendly", icon: UserCheck },
-    { text: "One Major Project", icon: FolderKanban },
-    { text: "Internship Certificate", icon: BadgeCheck },
-  ];
+  const [currentKeyword, setCurrentKeyword] = useState(0);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentKeyword((prev) => (prev + 1) % rotatingKeywords.length);
+    }, 3000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.1,
+      },
+    },
+  };
+
+  const itemVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: { opacity: 1, y: 0 },
+  };
 
   return (
-    <section className="relative bg-white overflow-hidden">
-      {/* Subtle background gradient */}
-      <div className="absolute inset-0 bg-gradient-to-b from-indigo-50/50 via-white to-white" />
-      
-      <div className="max-w-7xl mx-auto px-6 py-12 md:py-20 relative z-10">
-        <div className="max-w-4xl mx-auto text-center">
-          {/* Main Heading */}
-          <motion.h1
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-            className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight text-slate-900 mb-6 leading-tight"
+    <section className="relative bg-gradient-to-br from-slate-50 via-white to-indigo-50/30 overflow-hidden">
+      {/* Animated gradient mesh background */}
+      <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/5 via-purple-500/5 to-transparent" />
+      <motion.div
+        className="absolute inset-0 opacity-30"
+        animate={{
+          backgroundPosition: ["0% 0%", "100% 100%"],
+        }}
+        transition={{
+          duration: 20,
+          repeat: Infinity,
+          repeatType: "reverse",
+        }}
+        style={{
+          backgroundImage: "radial-gradient(circle at 20% 50%, rgba(99, 102, 241, 0.1), transparent 50%)",
+          backgroundSize: "200% 200%",
+        }}
+      />
+
+      <div className="max-w-7xl mx-auto px-6 py-10 md:py-16 relative z-10">
+        <motion.div
+          variants={containerVariants}
+          initial="hidden"
+          animate="visible"
+          className="max-w-5xl mx-auto text-center"
+        >
+          {/* Company Badge */}
+          <motion.div
+            variants={itemVariants}
+            className="inline-flex items-center gap-2 px-4 py-2 bg-white/80 backdrop-blur-sm border border-indigo-200/50 rounded-full mb-6 shadow-sm"
           >
-            Become a Job-Ready{" "}
-            <span className="text-[#4F46E5]">
-              Data Scientist
+            <Sparkles className="h-4 w-4 text-indigo-600" />
+            <span className="text-sm font-semibold text-indigo-600">
+              Apex Tech Innovation Pvt Ltd
+            </span>
+          </motion.div>
+
+          {/* Main Heading with Rotating Keywords */}
+          <motion.h1
+            variants={itemVariants}
+            className="text-4xl md:text-5xl lg:text-6xl font-extrabold tracking-tight text-slate-900 mb-4 leading-tight"
+          >
+            Building Industry-Ready{" "}
+            <br className="hidden md:block" />
+            <span className="relative inline-block">
+              <AnimatePresence mode="wait">
+                <motion.span
+                  key={currentKeyword}
+                  initial={{ opacity: 0, y: 20, rotateX: -90 }}
+                  animate={{ opacity: 1, y: 0, rotateX: 0 }}
+                  exit={{ opacity: 0, y: -20, rotateX: 90 }}
+                  transition={{ duration: 0.5 }}
+                  className="inline-block text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 via-purple-600 to-indigo-600"
+                >
+                  {rotatingKeywords[currentKeyword]}
+                </motion.span>
+              </AnimatePresence>
             </span>{" "}
-            in 1–3 Months
+            Talent
           </motion.h1>
-          
+
           {/* Subheading */}
           <motion.p
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.1 }}
-            className="text-lg md:text-xl text-slate-600 leading-relaxed mb-10 max-w-2xl mx-auto"
+            variants={itemVariants}
+            className="text-lg md:text-xl text-slate-600 leading-relaxed mb-8 max-w-2xl mx-auto"
           >
-            Apex Tech Innovation provides structured, hands-on Data Science training with one major real-world project and an internship experience.
+            Transform your career with hands-on training, real-world projects, and industry mentorship. 
+            Join our ecosystem of tech professionals.
           </motion.p>
 
           {/* CTA Buttons */}
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.2 }}
-            className="flex flex-col sm:flex-row gap-4 justify-center mb-16"
+            variants={itemVariants}
+            className="flex flex-col sm:flex-row gap-3 justify-center mb-8"
           >
             <Link
               href="/contact"
-              className="inline-flex items-center justify-center px-6 py-3 bg-[#4F46E5] text-white font-semibold rounded-lg hover:bg-[#4338ca] transition-colors shadow-sm"
+              className="group inline-flex items-center justify-center px-6 py-3 bg-indigo-600 text-white font-semibold rounded-xl hover:bg-indigo-700 transition-all shadow-md hover:shadow-lg hover:scale-105"
             >
               Apply Now
-              <ArrowRight className="ml-2 h-4 w-4" />
+              <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
             </Link>
             <Link
-              href="#syllabus"
-              className="inline-flex items-center justify-center px-6 py-3 bg-white border-2 border-slate-200 text-slate-700 font-semibold rounded-lg hover:border-slate-300 hover:bg-slate-50 transition-colors shadow-sm"
+              href="#programs"
+              className="inline-flex items-center justify-center px-6 py-3 bg-white border-2 border-slate-200 text-slate-700 font-semibold rounded-xl hover:border-indigo-300 hover:bg-indigo-50 transition-all shadow-sm hover:shadow-md"
             >
               <Download className="mr-2 h-4 w-4" />
-              Download Syllabus
+              Explore Programs
             </Link>
             <Link
               href="/contact"
-              className="inline-flex items-center justify-center px-6 py-3 bg-white border-2 border-slate-200 text-slate-700 font-semibold rounded-lg hover:border-slate-300 hover:bg-slate-50 transition-colors shadow-sm"
+              className="inline-flex items-center justify-center px-6 py-3 bg-white border-2 border-slate-200 text-slate-700 font-semibold rounded-xl hover:border-indigo-300 hover:bg-indigo-50 transition-all shadow-sm hover:shadow-md"
             >
               <Phone className="mr-2 h-4 w-4" />
               Book Call
             </Link>
           </motion.div>
-
-          {/* Highlights Grid */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.3 }}
-            className="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-3xl mx-auto"
-          >
-            {highlights.map((highlight, index) => (
-              <motion.div
-                key={index}
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.4, delay: 0.4 + index * 0.1 }}
-                whileHover={{ scale: 1.05 }}
-                className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm hover:shadow-md transition-all"
-              >
-                <highlight.icon className="h-8 w-8 text-[#4F46E5] mx-auto mb-3" />
-                <p className="text-sm font-semibold text-slate-800">
-                  {highlight.text}
-                </p>
-              </motion.div>
-            ))}
-          </motion.div>
-        </div>
+        </motion.div>
       </div>
     </section>
   );

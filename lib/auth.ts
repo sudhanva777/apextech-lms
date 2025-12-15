@@ -101,13 +101,22 @@ export const authOptions: NextAuthOptions = {
       // For subsequent requests, role is already in token
       return token;
     },
-    async session({ session, token }) {
-      if (session.user && token) {
-        (session.user as any).id = token.id as string;
-        (session.user as any).role = (token.role as string) ?? "STUDENT";
-      }
-      return session;
-    },
+        async session({ session, token }) {
+          if (session.user && token) {
+            (session.user as any).id = token.id as string;
+            (session.user as any).role = (token.role as string) ?? "STUDENT";
+            
+            // Fetch user image from database
+            const dbUser = await prisma.user.findUnique({
+              where: { email: session.user.email ?? "" },
+              select: { image: true },
+            });
+            if (dbUser) {
+              (session.user as any).image = dbUser.image;
+            }
+          }
+          return session;
+        },
   },
 };
 

@@ -8,7 +8,7 @@ const features = [
   {
     icon: School,
     title: "Hands-on Real Learning",
-    description: "Learn by doing with practical tasks and real-world datasets.",
+    description: "Learn by doing with practical tasks and real-world projects.",
   },
   {
     icon: BookOpen,
@@ -39,39 +39,41 @@ const features = [
 
 function FeatureCards() {
   return (
-    <section className="bg-slate-50 py-12 md:py-20">
-      <div className="max-w-7xl mx-auto px-6">
+    <section className="bg-slate-50 dark:bg-slate-900 py-10 md:py-12">
+      <div className="max-w-6xl mx-auto px-6">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.6 }}
-          className="text-center mb-12 md:mb-16"
+          className="text-center mb-8"
         >
-          <h2 className="text-3xl md:text-4xl font-bold text-slate-900 mb-4">
-            Why Choose Us
+          <h2 className="text-3xl md:text-4xl font-bold text-slate-900 dark:text-white mb-3">
+            Why Choose Apex Tech Innovation
           </h2>
-          <p className="text-lg text-slate-600 max-w-2xl mx-auto">
-            We provide the best learning experience for aspiring Data Scientists
+          <p className="text-lg text-slate-600 dark:text-slate-400 max-w-2xl mx-auto">
+            Building industry-ready tech talent across AI, ML, and Full-Stack Engineering
           </p>
         </motion.div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
           {features.map((feature, index) => (
             <motion.div
               key={index}
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              transition={{ duration: 0.4, delay: index * 0.1 }}
-              whileHover={{ y: -4 }}
-              className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm hover:shadow-md transition-all"
+              transition={{ duration: 0.4, delay: index * 0.05 }}
+              whileHover={{ y: -4, scale: 1.02 }}
+              className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 p-6 shadow-sm hover:shadow-md transition-all"
             >
-              <feature.icon className="h-10 w-10 text-[#4F46E5] mb-4" />
-              <h3 className="text-lg font-semibold text-slate-900 mb-2">
+              <feature.icon className="h-10 w-10 text-indigo-600 dark:text-indigo-400 mb-4" />
+              <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-2">
                 {feature.title}
               </h3>
-              <p className="text-slate-600 leading-relaxed">{feature.description}</p>
+              <p className="text-slate-600 dark:text-slate-400 leading-relaxed text-sm">
+                {feature.description}
+              </p>
             </motion.div>
           ))}
         </div>

@@ -43,24 +43,24 @@ const testimonials = [
 
 export default function Testimonials() {
   return (
-    <section className="bg-white py-12 md:py-20">
-      <div className="max-w-7xl mx-auto px-6">
+    <section className="bg-white dark:bg-slate-900 py-10 md:py-12">
+      <div className="max-w-6xl mx-auto px-6">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.6 }}
-          className="text-center mb-12 md:mb-16"
+          className="text-center mb-8"
         >
-          <h2 className="text-3xl md:text-4xl font-bold text-slate-900 mb-4">
-            Hear from Our Students
+          <h2 className="text-3xl md:text-4xl font-bold text-slate-900 dark:text-white mb-3">
+            What Our Students Say
           </h2>
-          <p className="text-lg text-slate-600 max-w-2xl mx-auto">
-            See how our program has transformed careers
+          <p className="text-lg text-slate-600 dark:text-slate-400 max-w-2xl mx-auto">
+            Real experiences from our Apex Tech Innovation community
           </p>
         </motion.div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
           {testimonials.map((testimonial, index) => (
             <motion.div
               key={index}
@@ -68,23 +68,24 @@ export default function Testimonials() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.4, delay: index * 0.1 }}
-              whileHover={{ y: -4 }}
-              className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm hover:shadow-md transition-all"
+              whileHover={{ y: -4, scale: 1.02 }}
+              className="bg-slate-50 dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 p-6 shadow-sm hover:shadow-md transition-all"
             >
-              <div className="flex items-center gap-1 mb-4">
+              <div className="flex gap-1 mb-4">
                 {[...Array(testimonial.rating)].map((_, i) => (
-                  <Star
-                    key={i}
-                    className="h-4 w-4 fill-yellow-400 text-yellow-400"
-                  />
+                  <Star key={i} className="h-4 w-4 fill-yellow-400 text-yellow-400" />
                 ))}
               </div>
-              <p className="text-slate-700 mb-6 leading-relaxed italic">
+              <p className="text-slate-700 dark:text-slate-300 mb-4 leading-relaxed text-sm">
                 "{testimonial.content}"
               </p>
-              <div className="border-t border-slate-200 pt-4">
-                <p className="font-semibold text-slate-900">{testimonial.name}</p>
-                <p className="text-sm text-slate-600 mt-1">{testimonial.role}</p>
+              <div>
+                <p className="font-semibold text-slate-900 dark:text-white text-sm">
+                  {testimonial.name}
+                </p>
+                <p className="text-xs text-slate-600 dark:text-slate-400">
+                  {testimonial.role}
+                </p>
               </div>
             </motion.div>
           ))}

@@ -8,6 +8,7 @@ import { useTheme } from "next-themes";
 import { Menu, X, LogOut, Sun, Moon } from "lucide-react";
 import Logo from "./Logo";
 import { motion, AnimatePresence } from "framer-motion";
+import AvatarDropdown from "./AvatarDropdown";
 
 const navLinks = [
   { name: "Home", href: "/" },
@@ -101,38 +102,8 @@ export default function Navbar() {
                   Apply Now
                 </Link>
               </>
-            ) : userRole === "ADMIN" ? (
-              <>
-                <Link
-                  href="/admin"
-                  className="px-5 py-2 text-sm font-semibold text-white bg-[#4F46E5] rounded-lg hover:bg-[#4338ca] transition-colors shadow-sm"
-                >
-                  Admin
-                </Link>
-                <button
-                  onClick={handleLogout}
-                  className="px-4 py-2 text-sm font-medium text-slate-600 dark:text-slate-400 hover:text-red-600 dark:hover:text-red-400 transition-colors flex items-center gap-2"
-                >
-                  <LogOut className="h-4 w-4" />
-                  Logout
-                </button>
-              </>
             ) : (
-              <>
-                <Link
-                  href="/student"
-                  className="px-5 py-2 text-sm font-semibold text-white bg-[#4F46E5] rounded-lg hover:bg-[#4338ca] transition-colors shadow-sm"
-                >
-                  Dashboard
-                </Link>
-                <button
-                  onClick={handleLogout}
-                  className="px-4 py-2 text-sm font-medium text-slate-600 dark:text-slate-400 hover:text-red-600 dark:hover:text-red-400 transition-colors flex items-center gap-2"
-                >
-                  <LogOut className="h-4 w-4" />
-                  Logout
-                </button>
-              </>
+              <AvatarDropdown />
             )}
           </div>
 

@@ -55,7 +55,7 @@
   }
   
   .section-padding {
-    @apply py-20 md:py-28 px-4 sm:px-6 lg:px-8;
+    @apply py-10 md:py-12 px-4 sm:px-6 lg:px-8;
   }
   
   .container-custom {

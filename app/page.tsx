@@ -1,5 +1,7 @@
 import dynamic from "next/dynamic";
 import Hero from "@/components/Hero";
+import TrustSection from "@/components/TrustSection";
+import ProgramsPreview from "@/components/ProgramsPreview";
 import FeatureCards from "@/components/FeatureCards";
 import ProgramHighlights from "@/components/ProgramHighlights";
 import ToolsSection from "@/components/ToolsSection";
@@ -19,6 +21,8 @@ export default function Home() {
   return (
     <>
       <Hero />
+      <TrustSection />
+      <ProgramsPreview />
       <FeatureCards />
       <ProgramHighlights />
       <ToolsSection />
