@@ -5,11 +5,30 @@ import { prisma } from "@/lib/prisma";
 import { writeFile, mkdir } from "fs/promises";
 import { join } from "path";
 import { existsSync } from "fs";
+import { validateUUIDParam, secureErrorResponse } from "@/lib/api-security";
+import { apiRateLimit, getRateLimitIdentifier } from "@/lib/rate-limit";
 
 export const dynamic = 'force-dynamic';
+export const maxDuration = 30;
 
 export async function POST(req: NextRequest) {
   try {
+    // Rate limiting
+    const identifier = getRateLimitIdentifier(req);
+    const rateLimitResult = await apiRateLimit.limit(identifier);
+    
+    if (!rateLimitResult.success) {
+      return NextResponse.json(
+        { error: "Too many requests. Please try again later." },
+        { 
+          status: 429,
+          headers: {
+            "Retry-After": String(Math.ceil((rateLimitResult.reset - Date.now()) / 1000)),
+          },
+        }
+      );
+    }
+
     const session = await getServerSession(authOptions);
 
     if (!session?.user?.email) {
@@ -30,6 +49,14 @@ export async function POST(req: NextRequest) {
     const formData = await req.formData();
     const taskId = formData.get("taskId") as string;
     const studentTaskId = formData.get("studentTaskId") as string;
+
+    // Validate UUIDs
+    if (!validateUUIDParam(taskId) || !validateUUIDParam(studentTaskId)) {
+      return NextResponse.json(
+        { error: "Invalid task ID format" },
+        { status: 400 }
+      );
+    }
     const answerText = formData.get("answerText") as string;
     const file = formData.get("file") as File | null;
     const submissionId = formData.get("submissionId") as string | null;
@@ -108,9 +135,19 @@ export async function POST(req: NextRequest) {
       }
 
       // Validate file size (10MB)
-      if (file.size > 10 * 1024 * 1024) {
+      const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+      if (file.size > MAX_FILE_SIZE) {
         return NextResponse.json(
           { error: "File size must be less than 10MB" },
+          { status: 400 }
+        );
+      }
+
+      // Validate file name (prevent path traversal)
+      const fileName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
+      if (!fileName || fileName.length > 255) {
+        return NextResponse.json(
+          { error: "Invalid file name" },
           { status: 400 }
         );
       }
@@ -123,12 +160,12 @@ export async function POST(req: NextRequest) {
 
       const bytes = await file.arrayBuffer();
       const buffer = Buffer.from(bytes);
-      const fileName = `${userId}-${taskId}-${Date.now()}-${file.name}`;
-      const filePath = join(uploadsDir, fileName);
+      const safeFileName = `${userId}-${taskId}-${Date.now()}-${fileName}`;
+      const filePath = join(uploadsDir, safeFileName);
 
       await writeFile(filePath, buffer);
 
-      fileUrl = `/uploads/tasks/${fileName}`;
+      fileUrl = `/uploads/tasks/${safeFileName}`;
     }
 
     // Create or update submission
@@ -161,8 +198,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ success: true, message: "Task submitted successfully" });
   } catch (error) {
-    console.error("Task submission error:", error);
-    return NextResponse.json({ error: "Failed to submit task" }, { status: 500 });
+    return secureErrorResponse(error, "Failed to submit task");
   }
 }
 

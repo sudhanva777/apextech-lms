@@ -1,4 +1,8 @@
+"use client";
+
+import { memo } from "react";
 import { School, BookOpen, Clock, Briefcase, Users, DollarSign } from "lucide-react";
+import { motion } from "framer-motion";
 
 const features = [
   {
@@ -33,36 +37,42 @@ const features = [
   },
 ];
 
-export default function FeatureCards() {
+function FeatureCards() {
   return (
-    <section className="section-padding bg-[#F8FAFC]">
-      <div className="container-custom">
-        <div className="text-center mb-16 animate-fade-up">
-          <h2 className="text-4xl md:text-5xl font-extrabold tracking-tight text-gray-900 mb-4">
+    <section className="bg-slate-50 py-12 md:py-20">
+      <div className="max-w-7xl mx-auto px-6">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.6 }}
+          className="text-center mb-12 md:mb-16"
+        >
+          <h2 className="text-3xl md:text-4xl font-bold text-slate-900 mb-4">
             Why Choose Us
           </h2>
-          <p className="text-lg text-gray-600 leading-relaxed max-w-2xl mx-auto">
+          <p className="text-lg text-slate-600 max-w-2xl mx-auto">
             We provide the best learning experience for aspiring Data Scientists
           </p>
-        </div>
+        </motion.div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {features.map((feature, index) => (
-            <div
+            <motion.div
               key={index}
-              className="card text-center group relative"
-              style={{ animationDelay: `${index * 0.1}s` }}
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.4, delay: index * 0.1 }}
+              whileHover={{ y: -4 }}
+              className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm hover:shadow-md transition-all"
             >
-              {/* Subtle gradient border on hover */}
-              <div className="absolute inset-0 rounded-3xl bg-gradient-to-r from-[#4F46E5] via-[#6366F1] to-[#3B82F6] opacity-0 group-hover:opacity-[0.08] transition-opacity duration-300 -z-10" />
-              <div className="relative z-10">
-                <feature.icon size={32} strokeWidth={2} className="text-[#4F46E5] mx-auto mb-4 icon-glow" />
-                <h3 className="text-xl font-semibold text-gray-900 mb-3">
-                  {feature.title}
-                </h3>
-                <p className="text-gray-600 leading-relaxed">{feature.description}</p>
-              </div>
-            </div>
+              <feature.icon className="h-10 w-10 text-[#4F46E5] mb-4" />
+              <h3 className="text-lg font-semibold text-slate-900 mb-2">
+                {feature.title}
+              </h3>
+              <p className="text-slate-600 leading-relaxed">{feature.description}</p>
+            </motion.div>
           ))}
         </div>
       </div>
@@ -70,3 +80,4 @@ export default function FeatureCards() {
   );
 }
 
+export default memo(FeatureCards);

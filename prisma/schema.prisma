@@ -151,6 +151,9 @@ model User {
   emailVerified                    DateTime?
   image                            String?
   passwordHash                     String?
+  resetTokenHash                   String?
+  resetTokenExpiresAt              DateTime?
+  resetTokenAttempts               Int                 @default(0)
   role                             String              @default("STUDENT")
   phone                            String?
   createdAt                        DateTime            @default(now())

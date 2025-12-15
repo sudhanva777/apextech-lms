@@ -1,5 +1,7 @@
 "use client";
 
+import { motion } from "framer-motion";
+
 const tools = [
   "Python",
   "Pandas",
@@ -14,25 +16,36 @@ const tools = [
 
 export default function ToolsSection() {
   return (
-    <section className="section-padding bg-[#F8FAFC]">
-      <div className="container-custom">
-        <div className="text-center mb-16 animate-fade-up">
-          <h2 className="text-4xl md:text-5xl font-extrabold tracking-tight text-gray-900 mb-4">
+    <section className="bg-slate-50 py-12 md:py-20">
+      <div className="max-w-7xl mx-auto px-6">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.6 }}
+          className="text-center mb-12 md:mb-16"
+        >
+          <h2 className="text-3xl md:text-4xl font-bold text-slate-900 mb-4">
             Tools You Learn
           </h2>
-          <p className="text-lg text-gray-600 leading-relaxed max-w-2xl mx-auto">
+          <p className="text-lg text-slate-600 max-w-2xl mx-auto">
             Master industry-standard tools used by Data Scientists worldwide
           </p>
-        </div>
+        </motion.div>
 
-        <div className="flex flex-wrap justify-center gap-4 md:gap-6">
+        <div className="flex flex-wrap justify-center gap-3 md:gap-4">
           {tools.map((tool, index) => (
-            <div
+            <motion.div
               key={index}
-              className="px-6 py-3 bg-gradient-to-r from-[#4F46E5] via-[#6366F1] to-[#3B82F6] text-white rounded-full font-semibold text-sm md:text-base shadow-md hover:shadow-lg hover:shadow-indigo-500/30 hover:scale-105 transition-all duration-300"
+              initial={{ opacity: 0, scale: 0.8 }}
+              whileInView={{ opacity: 1, scale: 1 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.3, delay: index * 0.05 }}
+              whileHover={{ scale: 1.05 }}
+              className="px-5 py-2.5 bg-[#4F46E5] text-white rounded-lg font-semibold text-sm shadow-sm hover:shadow-md transition-all"
             >
               {tool}
-            </div>
+            </motion.div>
           ))}
         </div>
       </div>

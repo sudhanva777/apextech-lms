@@ -6,6 +6,8 @@ import { User, Mail, Phone, Calendar, BookOpen, ClipboardList, FolderKanban, Che
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
+import { isValidUUID } from "@/lib/access-control";
+
 export default async function StudentDetailPage({
   params,
 }: {
@@ -16,6 +18,11 @@ export default async function StudentDetailPage({
   const sessionUser = session?.user;
   if (!sessionUser) redirect("/auth/login");
   if (sessionUser.role !== "ADMIN") redirect("/student");
+
+  // Validate UUID format (prevent injection)
+  if (!isValidUUID(params.id)) {
+    notFound();
+  }
 
   const dbUser = await prisma.user.findUnique({
     where: { id: params.id },

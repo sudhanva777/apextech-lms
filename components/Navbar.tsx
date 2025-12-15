@@ -1,82 +1,135 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo, useCallback } from "react";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
 import { useSession, signOut } from "next-auth/react";
-import { Bars3Icon, XMarkIcon } from "@heroicons/react/24/outline";
+import { useTheme } from "next-themes";
+import { Menu, X, LogOut, Sun, Moon } from "lucide-react";
 import Logo from "./Logo";
+import { motion, AnimatePresence } from "framer-motion";
+
+const navLinks = [
+  { name: "Home", href: "/" },
+  { name: "Program", href: "/program" },
+  { name: "Internship", href: "/internship" },
+  { name: "Major Project", href: "/project" },
+  { name: "About", href: "/about" },
+  { name: "Contact", href: "/contact" },
+] as const;
 
 export default function Navbar() {
   const { data: session, status } = useSession();
+  const { theme, setTheme } = useTheme();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const pathname = usePathname();
 
-  const navLinks = [
-    { name: "Home", href: "/" },
-    { name: "Program", href: "/program" },
-    { name: "Internship", href: "/internship" },
-    { name: "Major Project", href: "/project" },
-    { name: "About", href: "/about" },
-    { name: "Contact", href: "/contact" },
-  ];
+  const toggleTheme = useCallback(() => {
+    setTheme(theme === "dark" ? "light" : "dark");
+  }, [theme, setTheme]);
 
-  const userRole = session?.user ? (session.user as any).role : null;
+  const handleLogout = useCallback(() => {
+    signOut({ callbackUrl: "/" });
+  }, []);
+
+  const handleMobileLogout = useCallback(() => {
+    setMobileMenuOpen(false);
+    handleLogout();
+  }, [handleLogout]);
+
+  const userRole = useMemo(() => {
+    return session?.user ? (session.user as any).role : null;
+  }, [session?.user]);
 
   return (
-    <nav className="bg-white/70 backdrop-blur-md shadow-sm border-b border-white/20 sticky top-0 z-50">
-      <div className="container-custom">
+    <nav className="sticky top-0 z-50 bg-white/80 dark:bg-slate-900/80 backdrop-blur-lg border-b border-slate-200/50 dark:border-slate-800/50 shadow-sm">
+      <div className="max-w-7xl mx-auto px-6">
         <div className="flex items-center justify-between h-16 md:h-20">
           {/* Logo */}
-          <Link href="/" className="flex items-center">
+          <Link href="/" className="flex items-center flex-shrink-0">
             <Logo variant="symbol" />
           </Link>
 
-          {/* Desktop Navigation */}
-          <div className="hidden lg:flex items-center space-x-8">
-            {navLinks.map((link) => (
-              <Link
-                key={link.name}
-                href={link.href}
-                className={`font-medium transition-all duration-200 ${
-                  pathname === link.href
-                    ? "gradient-text font-semibold"
-                    : "text-gray-700 hover:gradient-text"
-                }`}
-              >
-                {link.name}
-              </Link>
-            ))}
-            {status === "loading" ? null : !session ? (
+          {/* Desktop Navigation - Center */}
+          <div className="hidden lg:flex items-center space-x-1 flex-1 justify-center">
+            {navLinks.map((link) => {
+              const isActive = pathname === link.href;
+              return (
+                <Link
+                  key={link.name}
+                  href={link.href}
+                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+                    isActive
+                      ? "text-[#4F46E5] dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950"
+                      : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800"
+                  }`}
+                >
+                  {link.name}
+                </Link>
+              );
+            })}
+          </div>
+
+          {/* Desktop Auth Actions - Right */}
+          <div className="hidden lg:flex items-center gap-2">
+            {/* Theme Toggle */}
+            <button
+              onClick={toggleTheme}
+              className="p-2 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+              aria-label="Toggle theme"
+            >
+              {theme === "dark" ? (
+                <Sun className="h-5 w-5" />
+              ) : (
+                <Moon className="h-5 w-5" />
+              )}
+            </button>
+              {status === "loading" ? (
+              <div className="h-9 w-20 bg-slate-100 dark:bg-slate-800 rounded-lg animate-pulse" />
+            ) : !session ? (
               <>
-                <Link href="/auth/login" className="text-gray-700 hover:gradient-text font-medium">
+                <Link
+                  href="/auth/login"
+                  className="px-4 py-2 text-sm font-medium text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white transition-colors"
+                >
                   Login
                 </Link>
-                <Link href="/contact" className="btn-primary text-sm">
+                <Link
+                  href="/contact"
+                  className="px-5 py-2 text-sm font-semibold text-white bg-[#4F46E5] rounded-lg hover:bg-[#4338ca] transition-colors shadow-sm"
+                >
                   Apply Now
                 </Link>
               </>
             ) : userRole === "ADMIN" ? (
               <>
-                <Link href="/admin" className="btn-primary text-sm">
+                <Link
+                  href="/admin"
+                  className="px-5 py-2 text-sm font-semibold text-white bg-[#4F46E5] rounded-lg hover:bg-[#4338ca] transition-colors shadow-sm"
+                >
                   Admin
                 </Link>
                 <button
-                  onClick={() => signOut({ callbackUrl: "/" })}
-                  className="text-gray-700 hover:text-red-600 transition-colors font-medium text-sm flex items-center gap-2"
+                  onClick={handleLogout}
+                  className="px-4 py-2 text-sm font-medium text-slate-600 dark:text-slate-400 hover:text-red-600 dark:hover:text-red-400 transition-colors flex items-center gap-2"
                 >
+                  <LogOut className="h-4 w-4" />
                   Logout
                 </button>
               </>
             ) : (
               <>
-                <Link href="/student" className="btn-primary text-sm">
+                <Link
+                  href="/student"
+                  className="px-5 py-2 text-sm font-semibold text-white bg-[#4F46E5] rounded-lg hover:bg-[#4338ca] transition-colors shadow-sm"
+                >
                   Dashboard
                 </Link>
                 <button
-                  onClick={() => signOut({ callbackUrl: "/" })}
-                  className="text-gray-700 hover:text-red-600 transition-colors font-medium text-sm flex items-center gap-2"
+                  onClick={handleLogout}
+                  className="px-4 py-2 text-sm font-medium text-slate-600 dark:text-slate-400 hover:text-red-600 dark:hover:text-red-400 transition-colors flex items-center gap-2"
                 >
+                  <LogOut className="h-4 w-4" />
                   Logout
                 </button>
               </>
@@ -84,92 +137,119 @@ export default function Navbar() {
           </div>
 
           {/* Mobile menu button */}
-          <button
-            className="lg:hidden p-2 text-gray-700 hover:text-primary transition-colors"
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            aria-label="Toggle menu"
-          >
+          <div className="lg:hidden flex items-center gap-2">
+            <button
+              onClick={toggleTheme}
+              className="p-2 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+              aria-label="Toggle theme"
+            >
+              {theme === "dark" ? (
+                <Sun className="h-5 w-5" />
+              ) : (
+                <Moon className="h-5 w-5" />
+              )}
+            </button>
+            <button
+              className="p-2 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 transition-colors"
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              aria-label="Toggle menu"
+            >
             {mobileMenuOpen ? (
-              <XMarkIcon className="h-6 w-6" />
+              <X className="h-6 w-6" />
             ) : (
-              <Bars3Icon className="h-6 w-6" />
+              <Menu className="h-6 w-6" />
             )}
           </button>
+          </div>
         </div>
 
         {/* Mobile Navigation */}
-        {mobileMenuOpen && (
-          <div className="lg:hidden py-4 border-t border-gray-200/50">
-            <div className="flex flex-col space-y-4">
-              {navLinks.map((link) => (
-                <Link
-                  key={link.name}
-                  href={link.href}
-                  className={`font-medium transition-colors duration-200 px-4 py-2 rounded-lg ${
-                    pathname === link.href
-                      ? "gradient-text font-semibold bg-indigo-50/50"
-                      : "text-gray-700 hover:gradient-text"
-                  }`}
-                  onClick={() => setMobileMenuOpen(false)}
-                >
-                  {link.name}
-                </Link>
-              ))}
-              {status === "loading" ? (
-                <div className="px-4 py-2 text-gray-400 text-sm">Loading...</div>
-              ) : !session ? (
-                <>
-                  <Link
-                    href="/auth/login"
-                    className="px-4 py-2 text-gray-700 hover:gradient-text font-medium"
-                    onClick={() => setMobileMenuOpen(false)}
-                  >
-                    Login
-                  </Link>
-                  <Link
-                    href="/contact"
-                    className="btn-primary mx-4 text-center"
-                    onClick={() => setMobileMenuOpen(false)}
-                  >
-                    Apply Now
-                  </Link>
-                </>
-              ) : userRole === "ADMIN" ? (
-                <>
-                  <Link
-                    href="/admin"
-                    className="btn-primary mx-4 text-center"
-                    onClick={() => setMobileMenuOpen(false)}
-                  >
-                    Admin
-                  </Link>
-                  <button
-                    onClick={() => signOut({ callbackUrl: "/" })}
-                    className="mx-4 px-4 py-2 text-gray-700 hover:text-red-600 transition-colors font-medium"
-                  >
-                    Logout
-                  </button>
-                </>
-              ) : (
-                <>
-                  <Link
-                    href="/student"
-                    className="btn-primary mx-4 text-center"
-                    onClick={() => setMobileMenuOpen(false)}
-                  >
-                    Dashboard
-                  </Link>
-                  <button
-                    onClick={() => signOut({ callbackUrl: "/" })}
-                    className="mx-4 px-4 py-2 text-gray-700 hover:text-red-600 transition-colors font-medium"
-                  >
-                    Logout
-                  </button>
-                </>
-              )}
-            </div>
-          </div>
-        )}
+        <AnimatePresence>
+          {mobileMenuOpen && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              exit={{ opacity: 0, height: 0 }}
+              className="lg:hidden overflow-hidden border-t border-slate-200 dark:border-slate-800"
+            >
+              <div className="py-4 space-y-1">
+                {navLinks.map((link) => {
+                  const isActive = pathname === link.href;
+                  return (
+                    <Link
+                      key={link.name}
+                      href={link.href}
+                      className={`block px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                        isActive
+                          ? "text-[#4F46E5] dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950"
+                          : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800"
+                      }`}
+                      onClick={() => setMobileMenuOpen(false)}
+                    >
+                      {link.name}
+                    </Link>
+                  );
+                })}
+                <div className="pt-4 border-t border-slate-200 space-y-2">
+                  {status === "loading" ? (
+                    <div className="px-4 py-2 text-sm text-slate-400">Loading...</div>
+                  ) : !session ? (
+                    <>
+                      <Link
+                        href="/auth/login"
+                        className="block px-4 py-2 text-sm font-medium text-slate-700 hover:text-slate-900"
+                        onClick={() => setMobileMenuOpen(false)}
+                      >
+                        Login
+                      </Link>
+                      <Link
+                        href="/contact"
+                        className="block px-4 py-2 text-sm font-semibold text-white bg-[#4F46E5] rounded-lg hover:bg-[#4338ca] text-center transition-colors"
+                        onClick={() => setMobileMenuOpen(false)}
+                      >
+                        Apply Now
+                      </Link>
+                    </>
+                  ) : userRole === "ADMIN" ? (
+                    <>
+                      <Link
+                        href="/admin"
+                        className="block px-4 py-2 text-sm font-semibold text-white bg-[#4F46E5] rounded-lg hover:bg-[#4338ca] text-center transition-colors"
+                        onClick={() => setMobileMenuOpen(false)}
+                      >
+                        Admin
+                      </Link>
+                      <button
+                        onClick={handleMobileLogout}
+                        className="w-full px-4 py-2 text-sm font-medium text-slate-600 hover:text-red-600 transition-colors flex items-center justify-center gap-2"
+                      >
+                        <LogOut className="h-4 w-4" />
+                        Logout
+                      </button>
+                    </>
+                  ) : (
+                    <>
+                      <Link
+                        href="/student"
+                        className="block px-4 py-2 text-sm font-semibold text-white bg-[#4F46E5] rounded-lg hover:bg-[#4338ca] text-center transition-colors"
+                        onClick={() => setMobileMenuOpen(false)}
+                      >
+                        Dashboard
+                      </Link>
+                      <button
+                        onClick={handleMobileLogout}
+                        className="w-full px-4 py-2 text-sm font-medium text-slate-600 hover:text-red-600 transition-colors flex items-center justify-center gap-2"
+                      >
+                        <LogOut className="h-4 w-4" />
+                        Logout
+                      </button>
+                    </>
+                  )}
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     </nav>
   );

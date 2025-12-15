@@ -22,5 +22,8 @@ export const prisma =
 
 if (process.env.NODE_ENV !== "production") {
   globalForPrisma.prisma = prisma;
+} else {
+  // In production (Vercel), also cache to prevent connection leaks
+  globalForPrisma.prisma = prisma;
 }
 

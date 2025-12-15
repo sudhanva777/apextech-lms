@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { EnvelopeIcon, PhoneIcon } from "@heroicons/react/24/outline";
+import { Mail, Phone, Linkedin, Twitter, Github } from "lucide-react";
 import Logo from "./Logo";
 
 export default function Footer() {
@@ -14,27 +14,48 @@ export default function Footer() {
     { name: "Contact", href: "/contact" },
   ];
 
+  const socialLinks = [
+    { name: "LinkedIn", icon: Linkedin, href: "#" },
+    { name: "Twitter", icon: Twitter, href: "#" },
+    { name: "GitHub", icon: Github, href: "#" },
+  ];
+
   return (
-    <footer className="bg-[#0f172a] text-gray-300 border-t border-gray-800/30">
-      <div className="container-custom section-padding">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-12">
+    <footer className="bg-slate-900 dark:bg-slate-950 text-slate-300 border-t border-slate-800">
+      <div className="max-w-7xl mx-auto px-6 py-12">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-8 md:gap-12">
           {/* Company Info */}
-          <div>
+          <div className="md:col-span-2">
             <Logo variant="text" className="mb-4" />
-            <p className="text-gray-400 mb-4 leading-relaxed">
+            <p className="text-slate-400 mb-6 leading-relaxed max-w-md">
               Empowering students with practical Data Science skills through hands-on training and real-world projects.
             </p>
+            {/* Social Icons */}
+            <div className="flex items-center gap-4">
+              {socialLinks.map((social) => (
+                <a
+                  key={social.name}
+                  href={social.href}
+                  className="p-2 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition-colors"
+                  aria-label={social.name}
+                >
+                  <social.icon className="h-5 w-5" />
+                </a>
+              ))}
+            </div>
           </div>
 
           {/* Quick Links */}
           <div>
-            <h4 className="text-lg font-semibold text-white mb-4">Quick Links</h4>
-            <ul className="space-y-2">
+            <h4 className="text-sm font-semibold text-white mb-4 uppercase tracking-wider">
+              Quick Links
+            </h4>
+            <ul className="space-y-3">
               {quickLinks.map((link) => (
                 <li key={link.name}>
                   <Link
                     href={link.href}
-                    className="text-gray-400 hover:text-white transition-all duration-200 hover:translate-x-1 inline-block"
+                    className="text-slate-400 hover:text-white transition-colors text-sm"
                   >
                     {link.name}
                   </Link>
@@ -45,22 +66,24 @@ export default function Footer() {
 
           {/* Contact Info */}
           <div>
-            <h4 className="text-lg font-semibold text-white mb-4">Contact Us</h4>
+            <h4 className="text-sm font-semibold text-white mb-4 uppercase tracking-wider">
+              Contact
+            </h4>
             <ul className="space-y-3">
-              <li className="flex items-center space-x-2">
-                <EnvelopeIcon className="h-5 w-5 text-gray-400" />
+              <li className="flex items-start gap-3">
+                <Mail className="h-5 w-5 text-slate-400 mt-0.5 flex-shrink-0" />
                 <a
                   href="mailto:apextechsolution17@gmail.com"
-                  className="text-gray-400 hover:text-white transition-colors duration-200"
+                  className="text-slate-400 hover:text-white transition-colors text-sm break-all"
                 >
                   apextechsolution17@gmail.com
                 </a>
               </li>
-              <li className="flex items-center space-x-2">
-                <PhoneIcon className="h-5 w-5 text-gray-400" />
+              <li className="flex items-start gap-3">
+                <Phone className="h-5 w-5 text-slate-400 mt-0.5 flex-shrink-0" />
                 <a
                   href="tel:+91-XXXXXXXXXX"
-                  className="text-gray-400 hover:text-white transition-colors duration-200"
+                  className="text-slate-400 hover:text-white transition-colors text-sm"
                 >
                   +91-XXXXXXXXXX
                 </a>
@@ -69,8 +92,8 @@ export default function Footer() {
           </div>
         </div>
 
-        <div className="border-t border-gray-800/30 mt-12 pt-8 text-center">
-          <p className="text-gray-400">
+        <div className="border-t border-slate-800 mt-12 pt-8">
+          <p className="text-center text-slate-400 text-sm">
             © {currentYear} Apex Tech Innovation Pvt Ltd. All rights reserved.
           </p>
         </div>
@@ -78,4 +101,3 @@ export default function Footer() {
     </footer>
   );
 }
-

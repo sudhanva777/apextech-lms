@@ -1,30 +1,62 @@
 import { NextRequest, NextResponse } from "next/server";
 import nodemailer from "nodemailer";
+import { contactRateLimit, getRateLimitIdentifier } from "@/lib/rate-limit";
+import { z } from "zod";
+import { parseAndValidateBody, secureErrorResponse } from "@/lib/api-security";
 
 export const dynamic = 'force-dynamic';
+export const maxDuration = 10;
+
+const contactSchema = z.object({
+  name: z.string().min(1, "Name is required").max(100).trim(),
+  email: z.string().email("Invalid email format").toLowerCase().trim(),
+  phone: z.string().max(20).trim().optional(),
+  message: z.string().min(1, "Message is required").max(5000).trim(),
+});
 
 export async function POST(req: NextRequest) {
   try {
-    const { name, email, phone, message } = await req.json();
-
-    // Validation
-    if (!name || !email || !message) {
+    // Rate limiting
+    const identifier = getRateLimitIdentifier(req);
+    const rateLimitResult = await contactRateLimit.limit(identifier);
+    
+    if (!rateLimitResult.success) {
       return NextResponse.json(
-        { error: "Name, email, and message are required" },
-        { status: 400 }
+        { error: "Too many requests. Please try again later." },
+        { 
+          status: 429,
+          headers: {
+            "Retry-After": String(Math.ceil((rateLimitResult.reset - Date.now()) / 1000)),
+          },
+        }
       );
     }
 
-    // Email validation
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
+    // Parse and validate body
+    const validation = await parseAndValidateBody(req, contactSchema);
+    if (!validation.success) {
       return NextResponse.json(
-        { error: "Invalid email address" },
-        { status: 400 }
+        { error: validation.error },
+        { status: validation.status }
       );
     }
+
+    const { name, email, phone, message } = validation.data;
+
+    // Sanitize message (basic XSS prevention)
+    const sanitizedMessage = message
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/\n/g, "<br>");
 
     // Create transporter
+    if (!process.env.CONTACT_EMAIL || !process.env.CONTACT_EMAIL_PASSWORD) {
+      return NextResponse.json(
+        { error: "Email service not configured" },
+        { status: 500 }
+      );
+    }
+
     const transporter = nodemailer.createTransport({
       service: "gmail",
       auth: {
@@ -49,7 +81,7 @@ export async function POST(req: NextRequest) {
             ${phone ? `<p><strong>Phone:</strong> ${phone}</p>` : ""}
             <p><strong>Message:</strong></p>
             <p style="background: white; padding: 15px; border-radius: 5px; border-left: 4px solid #4F46E5;">
-              ${message.replace(/\n/g, "<br>")}
+              ${sanitizedMessage}
             </p>
           </div>
           <p style="color: #666; font-size: 12px; margin-top: 20px;">
@@ -67,11 +99,6 @@ export async function POST(req: NextRequest) {
       { status: 200 }
     );
   } catch (error) {
-    console.error("Contact form error:", error);
-    return NextResponse.json(
-      { error: "Failed to send email. Please try again later." },
-      { status: 500 }
-    );
+    return secureErrorResponse(error, "Failed to send email. Please try again later.");
   }
 }
-

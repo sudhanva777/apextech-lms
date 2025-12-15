@@ -6,6 +6,7 @@ import { ArrowLeft, User } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import ChatInterface from "./ChatInterface";
+import { isValidUUID } from "@/lib/access-control";
 
 export default async function AdminChatPage({
   params,
@@ -17,6 +18,11 @@ export default async function AdminChatPage({
   const user = session?.user;
   if (!user) redirect("/auth/login");
   if (user.role !== "ADMIN") redirect("/student");
+
+  // Validate UUID format (prevent injection)
+  if (!isValidUUID(params.studentId)) {
+    notFound();
+  }
 
   // Get current admin user
   if (!user.email) {
@@ -32,7 +38,7 @@ export default async function AdminChatPage({
     return <div>Error: Admin not found</div>;
   }
 
-  // Get student
+  // Get student (only if admin - already verified above)
   const student = await prisma.user.findUnique({
     where: { id: params.studentId },
     select: { id: true, name: true, email: true, role: true },

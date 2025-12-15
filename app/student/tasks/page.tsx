@@ -25,26 +25,54 @@ export default async function TasksPage() {
     return <div>Error: User not found</div>;
   }
 
-  const studentTasks = await prisma.studentTask.findMany({
-    where: { userId: user.id },
-    include: { Task: true },
-    orderBy: { createdAt: "desc" },
-  });
+  // Parallelize queries
+  const [studentTasks, taskSubmissions] = await Promise.all([
+    prisma.studentTask.findMany({
+      where: { userId: user.id },
+      select: {
+        id: true,
+        taskId: true,
+        status: true,
+        createdAt: true,
+        Task: {
+          select: {
+            id: true,
+            title: true,
+            description: true,
+            dueDate: true,
+            week: true,
+          },
+        },
+      },
+      orderBy: { createdAt: "desc" },
+    }),
+    prisma.taskSubmission.findMany({
+      where: {
+        studentId: user.id,
+      },
+      select: {
+        id: true,
+        taskId: true,
+        answerText: true,
+        fileUrl: true,
+        status: true,
+        feedback: true,
+        createdAt: true,
+      },
+    }),
+  ]);
 
   // Get all task IDs
   const taskIds = studentTasks.map((st) => st.taskId);
 
-  // Get all task submissions for this user
-  const taskSubmissions = await prisma.taskSubmission.findMany({
-    where: {
-      studentId: user.id,
-      taskId: { in: taskIds },
-    },
-  });
+  // Filter submissions for relevant tasks
+  const relevantSubmissions = taskSubmissions.filter((sub) =>
+    taskIds.includes(sub.taskId)
+  );
 
   // Create a map for quick lookup
   const submissionMap = new Map(
-    taskSubmissions.map((sub) => [sub.taskId, sub])
+    relevantSubmissions.map((sub) => [sub.taskId, sub])
   );
 
   return (

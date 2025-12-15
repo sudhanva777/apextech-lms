@@ -1,4 +1,7 @@
-import { StarIcon } from "@heroicons/react/24/solid";
+"use client";
+
+import { Star } from "lucide-react";
+import { motion } from "framer-motion";
 
 const testimonials = [
   {
@@ -40,39 +43,53 @@ const testimonials = [
 
 export default function Testimonials() {
   return (
-    <section className="section-padding bg-[#FAFAFF]">
-      <div className="container-custom">
-        <div className="text-center mb-16 animate-fade-up">
-          <h2 className="text-4xl md:text-5xl font-extrabold tracking-tight text-gray-900 mb-4">
-            Hear from students who transformed their careers with our program
+    <section className="bg-white py-12 md:py-20">
+      <div className="max-w-7xl mx-auto px-6">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.6 }}
+          className="text-center mb-12 md:mb-16"
+        >
+          <h2 className="text-3xl md:text-4xl font-bold text-slate-900 mb-4">
+            Hear from Our Students
           </h2>
-        </div>
+          <p className="text-lg text-slate-600 max-w-2xl mx-auto">
+            See how our program has transformed careers
+          </p>
+        </motion.div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {testimonials.map((testimonial, index) => (
-            <div 
-              key={index} 
-              className="card-glass hover:scale-[1.02]"
-              style={{ animationDelay: `${index * 0.1}s` }}
+            <motion.div
+              key={index}
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.4, delay: index * 0.1 }}
+              whileHover={{ y: -4 }}
+              className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm hover:shadow-md transition-all"
             >
-              <div className="flex items-center space-x-1 mb-6">
+              <div className="flex items-center gap-1 mb-4">
                 {[...Array(testimonial.rating)].map((_, i) => (
-                  <StarIcon 
-                    key={i} 
-                    className="h-5 w-5 text-yellow-400 drop-shadow-[0_2px_6px_rgba(251,191,36,0.4)]" 
+                  <Star
+                    key={i}
+                    className="h-4 w-4 fill-yellow-400 text-yellow-400"
                   />
                 ))}
               </div>
-              <p className="text-gray-700 mb-6 italic leading-relaxed">"{testimonial.content}"</p>
-              <div className="border-t border-gray-200/50 pt-4">
-                <p className="font-semibold text-gray-900">{testimonial.name}</p>
-                <p className="text-sm text-gray-600 mt-1">{testimonial.role}</p>
+              <p className="text-slate-700 mb-6 leading-relaxed italic">
+                "{testimonial.content}"
+              </p>
+              <div className="border-t border-slate-200 pt-4">
+                <p className="font-semibold text-slate-900">{testimonial.name}</p>
+                <p className="text-sm text-slate-600 mt-1">{testimonial.role}</p>
               </div>
-            </div>
+            </motion.div>
           ))}
         </div>
       </div>
     </section>
   );
 }
-
