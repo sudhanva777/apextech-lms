@@ -36,9 +36,9 @@ export default function AvatarUpload({
       return;
     }
 
-    // Validate file size (2MB)
-    if (file.size > 2 * 1024 * 1024) {
-      setError("File size must be less than 2MB");
+    // Validate file size (5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      setError("File size must be less than 5MB");
       return;
     }
 
@@ -69,10 +69,19 @@ export default function AvatarUpload({
         body: formData,
       });
 
-      const data = await response.json();
+      let data;
+      try {
+        data = await response.json();
+      } catch (jsonError) {
+        throw new Error("Invalid response from server");
+      }
 
       if (!response.ok) {
-        throw new Error(data.error || "Upload failed");
+        throw new Error(data.error || "Failed to upload avatar");
+      }
+
+      if (!data.imageUrl) {
+        throw new Error("No image URL returned from server");
       }
 
       setImage(data.imageUrl);
@@ -85,7 +94,8 @@ export default function AvatarUpload({
       // Clear success message after 3 seconds
       setTimeout(() => setSuccess(false), 3000);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Upload failed");
+      const errorMessage = err instanceof Error ? err.message : "Failed to upload avatar";
+      setError(errorMessage);
       setPreview(null);
     } finally {
       setIsUploading(false);

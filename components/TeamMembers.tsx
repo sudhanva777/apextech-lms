@@ -4,14 +4,14 @@ import Image from "next/image";
 const teamMembers = [
   {
     name: "Dilip S Angadi",
-    role: "CEO & Founder",
+    role: "Founder & CEO",
     image: "/team/dilip.jpg",
     description:
       "Founder of Apex Tech Innovation Pvt Ltd, leading the mission to create a practical, job-focused Data Science training ecosystem.",
   },
   {
     name: "Sudhanva Patil",
-    role: "Co-Founder & Technical Head",
+    role: "Founder & CEO",
     image: "/team/sudhanva.jpg",
     description:
       "Oversees curriculum design, learning pathways, major project structure, and student training experience.",

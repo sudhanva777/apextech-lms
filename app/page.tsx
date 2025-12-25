@@ -10,7 +10,7 @@ import ToolsSection from "@/components/ToolsSection";
 const StudentJourney = dynamic(() => import("@/components/StudentJourney"), {
   ssr: true,
 });
-const Testimonials = dynamic(() => import("@/components/Testimonials"), {
+const QueryFeedbackForm = dynamic(() => import("@/components/QueryFeedbackForm"), {
   ssr: true,
 });
 const FinalCTA = dynamic(() => import("@/components/FinalCTA"), {
@@ -27,7 +27,7 @@ export default function Home() {
       <ProgramHighlights />
       <ToolsSection />
       <StudentJourney />
-      <Testimonials />
+      <QueryFeedbackForm />
       <FinalCTA />
     </>
   );

@@ -11,7 +11,7 @@ export const dynamic = 'force-dynamic';
 export const maxDuration = 30;
 
 const ALLOWED_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
-const MAX_FILE_SIZE = 2 * 1024 * 1024; // 2MB
+const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 
 export async function POST(req: NextRequest) {
   try {
@@ -41,9 +41,17 @@ export async function POST(req: NextRequest) {
     }
 
     // Validate file type
-    if (!ALLOWED_TYPES.includes(file.type)) {
+    if (!file.type || !ALLOWED_TYPES.includes(file.type)) {
       return NextResponse.json(
         { error: "Invalid file type. Only JPG, PNG, and WEBP are allowed." },
+        { status: 400 }
+      );
+    }
+
+    // Validate file exists and has content
+    if (file.size === 0) {
+      return NextResponse.json(
+        { error: "File is empty" },
         { status: 400 }
       );
     }
@@ -51,7 +59,7 @@ export async function POST(req: NextRequest) {
     // Validate file size
     if (file.size > MAX_FILE_SIZE) {
       return NextResponse.json(
-        { error: "File size must be less than 2MB" },
+        { error: "File size must be less than 5MB" },
         { status: 400 }
       );
     }

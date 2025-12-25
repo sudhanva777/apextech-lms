@@ -16,7 +16,7 @@ export default function ProfileForm({ initialPhone, initialProgramTrack }: Profi
   const [success, setSuccess] = useState(false);
   const [formData, setFormData] = useState({
     phone: initialPhone,
-    programTrack: initialProgramTrack,
+    programTrack: initialProgramTrack || "4-month",
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -82,17 +82,14 @@ export default function ProfileForm({ initialPhone, initialProgramTrack }: Profi
         </label>
         <select
           id="programTrack"
-          value={formData.programTrack}
+          value={formData.programTrack || "4-month"}
           onChange={(e) => setFormData({ ...formData, programTrack: e.target.value })}
           className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#4F46E5] focus:border-transparent"
         >
-          <option value="">Select a track</option>
-          <option value="1-month">1 Month Track</option>
-          <option value="2-month">2 Month Track</option>
-          <option value="3-month">3 Month Track</option>
+          <option value="4-month">4 Month Track</option>
         </select>
         <p className="mt-1 text-sm text-gray-500">
-          Choose your preferred program duration
+          Your program track
         </p>
       </div>
 

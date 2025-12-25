@@ -11,7 +11,7 @@ const programs = [
     title: "Data Science",
     status: "live",
     description: "Complete Data Science training with Python, ML, and real projects",
-    duration: "1-3 months",
+    duration: "3-4 months",
     href: "/program",
   },
   {

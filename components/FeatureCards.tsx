@@ -17,7 +17,7 @@ const features = [
   },
   {
     icon: Clock,
-    title: "1–3 Month Structured Tracks",
+    title: "3–4 Month Structured Tracks",
     description: "Flexible duration options to fit your schedule and goals.",
   },
   {
