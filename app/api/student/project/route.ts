@@ -2,18 +2,19 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { writeFile, mkdir } from "fs/promises";
-import { join } from "path";
-import { existsSync } from "fs";
 
 export const dynamic = 'force-dynamic';
+export const maxDuration = 30;
 
 export async function POST(req: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
 
     if (!session?.user?.email) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json(
+        { success: false, message: "Unauthorized" },
+        { status: 401 }
+      );
     }
 
     const user = await prisma.user.findUnique({
@@ -22,7 +23,10 @@ export async function POST(req: NextRequest) {
     });
 
     if (!user) {
-      return NextResponse.json({ error: "User not found" }, { status: 404 });
+      return NextResponse.json(
+        { success: false, message: "User not found" },
+        { status: 404 }
+      );
     }
 
     const userId = user.id;
@@ -34,69 +38,85 @@ export async function POST(req: NextRequest) {
 
     if (existingSubmission && existingSubmission.status !== "NOT_SUBMITTED") {
       return NextResponse.json(
-        { error: "You have already submitted a project" },
+        { success: false, message: "You have already submitted a project" },
         { status: 400 }
       );
     }
 
+    // Parse FormData
     const formData = await req.formData();
-    const title = formData.get("title") as string;
-    const description = formData.get("description") as string;
+    const title = formData.get("title") as string | null;
+    const description = formData.get("description") as string | null;
     const githubRepo = formData.get("githubRepo") as string | null;
+    const github = formData.get("github") as string | null; // Support both "github" and "githubRepo"
     const file = formData.get("file") as File | null;
 
-    if (!title || !description) {
+    // Validate required fields
+    if (!title || !title.trim()) {
       return NextResponse.json(
-        { error: "Title and description are required" },
+        { success: false, message: "Title is required" },
+        { status: 400 }
+      );
+    }
+
+    if (!description || !description.trim()) {
+      return NextResponse.json(
+        { success: false, message: "Description is required" },
         { status: 400 }
       );
     }
 
     if (!file) {
-      return NextResponse.json({ error: "File is required" }, { status: 400 });
+      return NextResponse.json(
+        { success: false, message: "File is required" },
+        { status: 400 }
+      );
     }
 
     // Validate file type
-    const allowedTypes = ["application/pdf", "application/zip", "application/x-zip-compressed"];
+    const allowedTypes = [
+      "application/pdf",
+      "application/zip",
+      "application/x-zip-compressed",
+    ];
+    
     if (!allowedTypes.includes(file.type)) {
       return NextResponse.json(
-        { error: "Only PDF and ZIP files are allowed" },
+        { success: false, message: "Only PDF and ZIP files are allowed" },
         { status: 400 }
       );
     }
 
     // Validate file size (10MB)
-    if (file.size > 10 * 1024 * 1024) {
+    const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+    if (file.size > MAX_FILE_SIZE) {
       return NextResponse.json(
-        { error: "File size must be less than 10MB" },
+        { success: false, message: "File size must be less than 10MB" },
         { status: 400 }
       );
     }
 
-    // Save file to public/uploads directory
-    const uploadsDir = join(process.cwd(), "public", "uploads", "projects");
-    if (!existsSync(uploadsDir)) {
-      await mkdir(uploadsDir, { recursive: true });
-    }
+    // Log file metadata (for debugging/monitoring)
+    console.log("[Project Submission] File received:", {
+      userId,
+      fileName: file.name,
+      fileType: file.type,
+      fileSize: file.size,
+      title: title.trim(),
+      hasGithub: !!(githubRepo || github),
+    });
 
-    const bytes = await file.arrayBuffer();
-    const buffer = Buffer.from(bytes);
-    const fileName = `${userId}-${Date.now()}-${file.name}`;
-    const filePath = join(uploadsDir, fileName);
+    // Use githubRepo or github (whichever is provided)
+    const finalGithubRepo = githubRepo || github || null;
 
-    await writeFile(filePath, buffer);
-
-    const fileUrl = `/uploads/projects/${fileName}`;
-
-    // Create or update submission
+    // Create or update submission (without fileUrl since we're not storing the file)
     if (existingSubmission) {
       await prisma.projectSubmission.update({
         where: { id: existingSubmission.id },
         data: {
-          title,
-          description,
-          githubRepo: githubRepo || null,
-          fileUrl,
+          title: title.trim(),
+          description: description.trim(),
+          githubRepo: finalGithubRepo?.trim() || null,
           status: "SUBMITTED",
           submittedAt: new Date(),
           updatedAt: new Date(),
@@ -107,21 +127,23 @@ export async function POST(req: NextRequest) {
         data: {
           id: crypto.randomUUID(),
           userId,
-          title,
-          description,
-          githubRepo: githubRepo || null,
-          fileUrl,
+          title: title.trim(),
+          description: description.trim(),
+          githubRepo: finalGithubRepo?.trim() || null,
           status: "SUBMITTED",
           updatedAt: new Date(),
         },
       });
     }
 
-    return NextResponse.json({ success: true, message: "Project submitted successfully" });
-  } catch (error) {
-    console.error("Project submission error:", error);
     return NextResponse.json(
-      { error: "Failed to submit project" },
+      { success: true, message: "Project submitted successfully" },
+      { status: 200 }
+    );
+  } catch (error) {
+    console.error("[Project Submission] Error:", error);
+    return NextResponse.json(
+      { success: false, message: "Failed to submit project" },
       { status: 500 }
     );
   }

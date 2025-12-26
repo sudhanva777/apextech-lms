@@ -48,8 +48,8 @@ export default function ProjectSubmissionForm() {
 
       const data = await response.json();
 
-      if (!response.ok) {
-        throw new Error(data.error || "Failed to submit project");
+      if (!response.ok || !data.success) {
+        throw new Error(data.message || data.error || "Failed to submit project");
       }
 
       router.refresh();
