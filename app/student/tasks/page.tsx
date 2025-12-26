@@ -2,7 +2,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
-import { ClipboardList, CheckCircle, Clock, Calendar, AlertCircle } from "lucide-react";
+import { ClipboardList, CheckCircle, Clock, Calendar, AlertCircle, FileText } from "lucide-react";
 import SubmitTaskForm from "./SubmitTaskForm";
 
 export default async function TasksPage() {
@@ -77,18 +77,20 @@ export default async function TasksPage() {
 
   return (
     <div className="max-w-6xl mx-auto">
-      <div className="mb-8">
-        <h1 className="text-4xl font-extrabold text-gray-900 mb-2">My Tasks</h1>
-        <p className="text-gray-600">View and track your assigned tasks</p>
+      <div className="mb-10">
+        <h1 className="heading-1">My Tasks</h1>
+        <p className="body-text">View and track your assigned tasks</p>
       </div>
 
       {studentTasks.length === 0 ? (
-        <div className="bg-white rounded-2xl border border-gray-100 shadow-lg p-12 text-center">
-          <ClipboardList className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">No Tasks Assigned</h2>
-          <p className="text-gray-600">
-            You don't have any tasks assigned yet. Check back later!
-          </p>
+        <div className="card">
+          <div className="empty-state">
+            <ClipboardList className="empty-state-icon" />
+            <h2 className="empty-state-title">No Tasks Assigned</h2>
+            <p className="empty-state-description">
+              You don't have any tasks assigned yet. Check back later!
+            </p>
+          </div>
         </div>
       ) : (
         <div className="space-y-6">
@@ -106,26 +108,26 @@ export default async function TasksPage() {
             return (
               <div
                 key={studentTask.id}
-                className="bg-white rounded-2xl border border-gray-100 shadow-lg overflow-hidden"
+                className="card card-hover overflow-hidden"
               >
                 <div className="p-6">
-                  <div className="flex items-start justify-between mb-4">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-3 mb-2">
-                        <h3 className="text-xl font-bold text-gray-900">
+                  <div className="flex items-start justify-between gap-4 mb-6">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-3 mb-3 flex-wrap">
+                        <h3 className="heading-4">
                           {studentTask.Task.title}
                         </h3>
                         <span
-                          className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${
+                          className={`badge ${
                             isAccepted
-                              ? "bg-green-100 text-green-800"
+                              ? "badge-success"
                               : isRejected
-                              ? "bg-red-100 text-red-800"
+                              ? "badge-danger"
                               : isPending
-                              ? "bg-blue-100 text-blue-800"
+                              ? "badge-info"
                               : isOverdue
-                              ? "bg-red-100 text-red-800"
-                              : "bg-yellow-100 text-yellow-800"
+                              ? "badge-danger"
+                              : "badge-warning"
                           }`}
                         >
                           {isAccepted
@@ -137,11 +139,11 @@ export default async function TasksPage() {
                             : studentTask.status.replace("_", " ")}
                         </span>
                       </div>
-                      <p className="text-gray-600 mb-4">{studentTask.Task.description}</p>
-                      <div className="flex items-center gap-6 text-sm text-gray-500">
+                      <p className="body-text mb-4">{studentTask.Task.description}</p>
+                      <div className="flex items-center gap-6 body-text-sm text-gray-500 flex-wrap">
                         {studentTask.Task.dueDate && (
                           <div className="flex items-center gap-2">
-                            <Calendar size={16} />
+                            <Calendar size={16} className="text-gray-400" />
                             <span>
                               Due: {new Date(studentTask.Task.dueDate).toLocaleDateString()}
                             </span>
@@ -149,13 +151,13 @@ export default async function TasksPage() {
                         )}
                         {studentTask.Task.week && (
                           <div className="flex items-center gap-2">
-                            <Clock size={16} />
+                            <Clock size={16} className="text-gray-400" />
                             <span>Week {studentTask.Task.week}</span>
                           </div>
                         )}
                         {submission && (
                           <div className="flex items-center gap-2">
-                            <CheckCircle size={16} className="text-green-500" />
+                            <FileText size={16} className="text-indigo-500" />
                             <span>
                               Submitted: {new Date(submission.createdAt).toLocaleDateString()}
                             </span>
@@ -163,24 +165,24 @@ export default async function TasksPage() {
                         )}
                       </div>
                       {isRejected && submission?.feedback && (
-                        <div className="mt-4 bg-red-50 border border-red-200 rounded-lg p-3">
-                          <div className="flex items-start gap-2">
-                            <AlertCircle className="h-5 w-5 text-red-600 mt-0.5" />
+                        <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-xl">
+                          <div className="flex items-start gap-3">
+                            <AlertCircle className="h-5 w-5 text-red-600 mt-0.5 flex-shrink-0" />
                             <div>
-                              <p className="text-sm font-semibold text-red-800">
+                              <p className="text-sm font-semibold text-red-800 mb-1">
                                 Feedback from Admin:
                               </p>
-                              <p className="text-sm text-red-700 mt-1">{submission.feedback}</p>
+                              <p className="body-text-sm text-red-700">{submission.feedback}</p>
                             </div>
                           </div>
                         </div>
                       )}
                     </div>
-                    <div className="ml-4">
+                    <div className="flex-shrink-0">
                       {isAccepted ? (
-                        <CheckCircle className="h-8 w-8 text-green-500" />
+                        <CheckCircle className="h-10 w-10 text-green-500" />
                       ) : (
-                        <Clock className="h-8 w-8 text-gray-400" />
+                        <Clock className="h-10 w-10 text-gray-400" />
                       )}
                     </div>
                   </div>

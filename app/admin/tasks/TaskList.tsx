@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { ClipboardList, User, Calendar, Clock, CheckCircle, Plus, Trash2, Loader2, X, Edit, Eye, Check, XCircle } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { ClipboardList, User, Calendar, Clock, CheckCircle, Plus, Trash2, Loader2, X, Edit, Eye, Check, XCircle, MoreVertical } from "lucide-react";
 import AssignTaskModal from "./AssignTaskModal";
 
 interface Task {
@@ -274,19 +275,19 @@ export default function TaskList({ tasks: initialTasks, studentTasks, students, 
   };
 
   return (
-    <div className="bg-white rounded-2xl border border-gray-100 shadow-lg p-6">
-      <div className="mb-6">
-        <h2 className="text-2xl font-bold text-gray-900 mb-4 flex items-center gap-2">
-          <ClipboardList className="h-6 w-6 text-[#4F46E5]" />
+    <div className="card">
+      <div className="mb-8">
+        <h2 className="heading-3 flex items-center gap-3">
+          <ClipboardList className="h-6 w-6 text-indigo-600" />
           All Tasks & Assignments
         </h2>
 
         {/* Filters */}
-        <div className="grid md:grid-cols-4 gap-4 mb-4">
+        <div className="grid md:grid-cols-4 gap-4">
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
-            className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#4F46E5] focus:border-transparent"
+            className="form-input"
           >
             <option value="">All Status</option>
             <option value="PENDING">Pending</option>
@@ -298,7 +299,7 @@ export default function TaskList({ tasks: initialTasks, studentTasks, students, 
           <select
             value={weekFilter}
             onChange={(e) => setWeekFilter(e.target.value)}
-            className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#4F46E5] focus:border-transparent"
+            className="form-input"
           >
             <option value="">All Weeks</option>
             {Array.from({ length: 12 }, (_, i) => i + 1).map((week) => (
@@ -311,7 +312,7 @@ export default function TaskList({ tasks: initialTasks, studentTasks, students, 
           <select
             value={studentFilter}
             onChange={(e) => setStudentFilter(e.target.value)}
-            className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#4F46E5] focus:border-transparent"
+            className="form-input"
           >
             <option value="">All Students</option>
             {students.map((student) => (
@@ -324,13 +325,13 @@ export default function TaskList({ tasks: initialTasks, studentTasks, students, 
           <div className="flex gap-2">
             <button
               onClick={applyFilters}
-              className="btn-primary flex-1 text-sm py-2"
+              className="btn-primary btn-sm flex-1"
             >
               Apply Filters
             </button>
             <button
               onClick={clearFilters}
-              className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 text-sm"
+              className="btn-secondary btn-sm"
             >
               Clear
             </button>
@@ -339,225 +340,295 @@ export default function TaskList({ tasks: initialTasks, studentTasks, students, 
       </div>
 
       {/* Tasks List */}
-      <div className="space-y-4">
-        {tasks.map((task) => (
-          <div
-            key={task.id}
-            className="border border-gray-200 rounded-lg p-4 hover:border-[#4F46E5] transition-colors"
-          >
-            <div className="flex items-start justify-between mb-3">
-              <div className="flex-1">
-                <h3 className="font-semibold text-gray-900 mb-1">{task.title}</h3>
-                <p className="text-sm text-gray-600 mb-2">{task.description}</p>
-                <div className="flex items-center gap-4 text-xs text-gray-500">
-                  {task.week && <span>Week {task.week}</span>}
-                  {task.dueDate && (
-                    <span className="flex items-center gap-1">
-                      <Calendar size={12} />
-                      Due: {new Date(task.dueDate).toLocaleDateString()}
-                      <button
-                        onClick={() => {
-                          if (task.dueDate) {
-                            setTaskForDueDate({ id: task.id, currentDate: new Date(task.dueDate).toISOString().split('T')[0] });
-                          }
-                        }}
-                        className="ml-1 text-indigo-600 hover:text-indigo-700"
-                        title="Change due date"
-                      >
-                        📅
-                      </button>
-                    </span>
-                  )}
-                  {!task.dueDate && (
-                    <button
-                      onClick={() => setTaskForDueDate({ id: task.id, currentDate: "" })}
-                      className="text-indigo-600 hover:text-indigo-700 text-xs flex items-center gap-1"
-                      title="Set due date"
-                    >
-                      <Calendar size={12} />
-                      Set due date
-                    </button>
-                  )}
-                </div>
-              </div>
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={() => handleViewSubmissions(task.id)}
-                  className="text-blue-600 hover:text-blue-700 flex items-center gap-1 text-sm font-medium"
-                  title="View submissions"
-                >
-                  <Eye size={16} />
-                  Submissions
-                </button>
-                <button
-                  onClick={() => setSelectedTask(task.id)}
-                  className="text-[#4F46E5] hover:text-[#4338ca] flex items-center gap-1 text-sm font-medium"
-                >
-                  <Plus size={16} />
-                  Assign
-                </button>
-                <button
-                  onClick={() => setTaskToEdit(task)}
-                  className="text-indigo-600 hover:text-indigo-700 flex items-center gap-1 text-sm font-medium"
-                  title="Edit task"
-                >
-                  <Edit size={16} />
-                </button>
-                <button
-                  onClick={() => setTaskToDelete(task.id)}
-                  className="text-red-600 hover:text-red-700 flex items-center gap-1 text-sm font-medium"
-                  title="Delete task"
-                >
-                  <Trash2 size={16} />
-                </button>
-              </div>
-            </div>
-
-            {/* Assigned Students */}
-            {task.StudentTask.length > 0 && (
-              <div className="mt-3 pt-3 border-t border-gray-200">
-                <p className="text-xs font-medium text-gray-700 mb-2">Assigned to:</p>
-                <div className="flex flex-wrap gap-2">
-                  {task.StudentTask.map((st) => (
-                    <div
-                      key={st.id}
-                      className="flex items-center gap-2 px-3 py-1 bg-gray-50 rounded-lg text-sm"
-                    >
-                      <User size={14} />
-                      <span className="text-gray-700">{st.User.name || st.User.email}</span>
-                      <span
-                        className={`px-2 py-0.5 rounded text-xs ${
-                          st.status === "COMPLETED"
-                            ? "bg-green-100 text-green-800"
-                            : "bg-yellow-100 text-yellow-800"
-                        }`}
-                      >
-                        {st.status}
-                      </span>
+      {tasks.length === 0 ? (
+        <div className="empty-state">
+          <ClipboardList className="empty-state-icon" />
+          <h3 className="empty-state-title">No Tasks Found</h3>
+          <p className="empty-state-description">
+            Create your first task to get started with task management.
+          </p>
+        </div>
+      ) : (
+        <div className="space-y-4">
+          <AnimatePresence>
+            {tasks.map((task, index) => (
+              <motion.div
+                key={task.id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                transition={{ duration: 0.2, delay: index * 0.05 }}
+                className="card card-hover group"
+              >
+                <div className="flex items-start justify-between gap-4">
+                  <div className="flex-1 min-w-0">
+                    <h3 className="heading-4 mb-2">{task.title}</h3>
+                    <p className="body-text-sm mb-4 line-clamp-2">{task.description}</p>
+                    <div className="flex items-center gap-4 body-text-sm text-gray-500">
+                      {task.week && (
+                        <span className="flex items-center gap-1.5">
+                          <Clock size={14} />
+                          Week {task.week}
+                        </span>
+                      )}
+                      {task.dueDate && (
+                        <span className="flex items-center gap-1.5">
+                          <Calendar size={14} />
+                          Due: {new Date(task.dueDate).toLocaleDateString()}
+                          <button
+                            onClick={() => {
+                              if (task.dueDate) {
+                                setTaskForDueDate({ id: task.id, currentDate: new Date(task.dueDate).toISOString().split('T')[0] });
+                              }
+                            }}
+                            className="btn-icon text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50"
+                            title="Change due date"
+                          >
+                            <Calendar size={14} />
+                          </button>
+                        </span>
+                      )}
+                      {!task.dueDate && (
+                        <button
+                          onClick={() => setTaskForDueDate({ id: task.id, currentDate: "" })}
+                          className="flex items-center gap-1.5 text-indigo-600 hover:text-indigo-700 transition-colors"
+                          title="Set due date"
+                        >
+                          <Calendar size={14} />
+                          Set due date
+                        </button>
+                      )}
                     </div>
-                  ))}
+
+                    {/* Assigned Students */}
+                    {task.StudentTask.length > 0 && (
+                      <div className="mt-4 pt-4 border-t border-gray-200">
+                        <p className="text-xs font-semibold text-gray-700 mb-3 uppercase tracking-wide">Assigned to:</p>
+                        <div className="flex flex-wrap gap-2">
+                          {task.StudentTask.map((st) => (
+                            <motion.div
+                              key={st.id}
+                              whileHover={{ scale: 1.05 }}
+                              className="flex items-center gap-2 px-3 py-1.5 bg-gray-50 rounded-lg text-sm border border-gray-200"
+                            >
+                              <User size={14} className="text-gray-500" />
+                              <span className="text-gray-700 font-medium">{st.User.name || st.User.email}</span>
+                              <span
+                                className={`badge ${
+                                  st.status === "COMPLETED"
+                                    ? "badge-success"
+                                    : st.status === "OVERDUE"
+                                    ? "badge-danger"
+                                    : "badge-warning"
+                                }`}
+                              >
+                                {st.status.replace("_", " ")}
+                              </span>
+                            </motion.div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                  
+                  {/* Action Buttons Group */}
+                  <div className="flex items-center gap-1 flex-shrink-0">
+                    <motion.button
+                      whileHover={{ scale: 1.1 }}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={() => handleViewSubmissions(task.id)}
+                      className="btn-icon text-blue-600 hover:bg-blue-50"
+                      title="View submissions"
+                    >
+                      <Eye size={18} />
+                    </motion.button>
+                    <motion.button
+                      whileHover={{ scale: 1.1 }}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={() => setSelectedTask(task.id)}
+                      className="btn-icon text-indigo-600 hover:bg-indigo-50"
+                      title="Assign task"
+                    >
+                      <Plus size={18} />
+                    </motion.button>
+                    <motion.button
+                      whileHover={{ scale: 1.1 }}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={() => setTaskToEdit(task)}
+                      className="btn-icon text-indigo-600 hover:bg-indigo-50"
+                      title="Edit task"
+                    >
+                      <Edit size={18} />
+                    </motion.button>
+                    <motion.button
+                      whileHover={{ scale: 1.1 }}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={() => setTaskToDelete(task.id)}
+                      className="btn-icon text-red-600 hover:bg-red-50"
+                      title="Delete task"
+                    >
+                      <Trash2 size={18} />
+                    </motion.button>
+                  </div>
                 </div>
-              </div>
-            )}
-          </div>
-        ))}
-      </div>
+              </motion.div>
+            ))}
+          </AnimatePresence>
+        </div>
+      )}
 
       {/* Student Tasks List (Filtered) */}
       {studentTasks.length > 0 && (
         <div className="mt-8">
-          <h3 className="text-lg font-bold text-gray-900 mb-4">Filtered Assignments</h3>
+          <h3 className="heading-4 mb-4">Filtered Assignments</h3>
           <div className="space-y-3">
-            {studentTasks.map((st) => (
-              <div
-                key={st.id}
-                className="border border-gray-200 rounded-lg p-4 hover:border-[#4F46E5] transition-colors"
-              >
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <h4 className="font-semibold text-gray-900">{st.Task.title}</h4>
-                    <p className="text-sm text-gray-600 mt-1">
-                      Student: {st.User.name || st.User.email}
-                    </p>
-                    <div className="flex items-center gap-4 text-xs text-gray-500 mt-2">
-                      {st.Task.week && <span>Week {st.Task.week}</span>}
-                      {st.Task.dueDate && (
-                        <span className="flex items-center gap-1">
-                          <Calendar size={12} />
-                          Due: {new Date(st.Task.dueDate).toLocaleDateString()}
-                        </span>
+            <AnimatePresence>
+              {studentTasks.map((st, index) => (
+                <motion.div
+                  key={st.id}
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: 20 }}
+                  transition={{ duration: 0.2, delay: index * 0.05 }}
+                  className="card card-hover"
+                >
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="flex-1 min-w-0">
+                      <h4 className="heading-4 mb-2">{st.Task.title}</h4>
+                      <p className="body-text-sm mb-3">
+                        Student: <span className="font-semibold text-gray-900">{st.User.name || st.User.email}</span>
+                      </p>
+                      <div className="flex items-center gap-4 body-text-sm text-gray-500">
+                        {st.Task.week && (
+                          <span className="flex items-center gap-1.5">
+                            <Clock size={14} />
+                            Week {st.Task.week}
+                          </span>
+                        )}
+                        {st.Task.dueDate && (
+                          <span className="flex items-center gap-1.5">
+                            <Calendar size={14} />
+                            Due: {new Date(st.Task.dueDate).toLocaleDateString()}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-3 flex-shrink-0">
+                      <span
+                        className={`badge ${
+                          st.status === "COMPLETED"
+                            ? "badge-success"
+                            : st.status === "OVERDUE"
+                            ? "badge-danger"
+                            : "badge-warning"
+                        }`}
+                      >
+                        {st.status.replace("_", " ")}
+                      </span>
+                      {st.status === "COMPLETED" ? (
+                        <CheckCircle className="h-5 w-5 text-green-500" />
+                      ) : (
+                        <Clock className="h-5 w-5 text-yellow-500" />
                       )}
                     </div>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <span
-                      className={`px-3 py-1 rounded-full text-xs font-medium ${
-                        st.status === "COMPLETED"
-                          ? "bg-green-100 text-green-800"
-                          : st.status === "OVERDUE"
-                          ? "bg-red-100 text-red-800"
-                          : "bg-yellow-100 text-yellow-800"
-                      }`}
-                    >
-                      {st.status}
-                    </span>
-                    {st.status === "COMPLETED" ? (
-                      <CheckCircle className="h-5 w-5 text-green-500" />
-                    ) : (
-                      <Clock className="h-5 w-5 text-yellow-500" />
-                    )}
-                  </div>
-                </div>
-              </div>
-            ))}
+                </motion.div>
+              ))}
+            </AnimatePresence>
           </div>
         </div>
       )}
 
-      {/* Success/Error Messages */}
-      {deleteSuccess && (
-        <div className="fixed top-4 right-4 bg-green-50 border border-green-200 text-green-800 px-4 py-3 rounded-lg shadow-lg z-50 flex items-center gap-2">
-          <CheckCircle className="h-5 w-5" />
-          <span>Task deleted successfully</span>
-          <button
-            onClick={() => setDeleteSuccess(false)}
-            className="ml-2 text-green-600 hover:text-green-800"
+      {/* Toast Notifications */}
+      <AnimatePresence>
+        {deleteSuccess && (
+          <motion.div
+            initial={{ opacity: 0, x: 100 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: 100 }}
+            className="toast toast-success"
           >
-            <X className="h-4 w-4" />
-          </button>
-        </div>
-      )}
+            <CheckCircle className="h-5 w-5 flex-shrink-0" />
+            <span className="font-medium">Task deleted successfully</span>
+            <button
+              onClick={() => setDeleteSuccess(false)}
+              className="ml-auto text-green-600 hover:text-green-900 transition-colors"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </motion.div>
+        )}
 
-      {deleteError && (
-        <div className="fixed top-4 right-4 bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg shadow-lg z-50 flex items-center gap-2">
-          <X className="h-5 w-5" />
-          <span>{deleteError}</span>
-          <button
-            onClick={() => setDeleteError(null)}
-            className="ml-2 text-red-600 hover:text-red-800"
+        {deleteError && (
+          <motion.div
+            initial={{ opacity: 0, x: 100 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: 100 }}
+            className="toast toast-error"
           >
-            <X className="h-4 w-4" />
-          </button>
-        </div>
-      )}
+            <X className="h-5 w-5 flex-shrink-0" />
+            <span className="font-medium">{deleteError}</span>
+            <button
+              onClick={() => setDeleteError(null)}
+              className="ml-auto text-red-600 hover:text-red-900 transition-colors"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Delete Confirmation Dialog */}
-      {taskToDelete && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4 shadow-xl">
-            <h3 className="text-lg font-bold text-gray-900 mb-2">Delete Task</h3>
-            <p className="text-sm text-gray-600 mb-4">
-              Are you sure you want to delete this task? This action cannot be undone and will also delete all related assignments and submissions.
-            </p>
-            <div className="flex gap-3 justify-end">
-              <button
-                onClick={() => setTaskToDelete(null)}
-                disabled={isDeleting}
-                className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 text-sm font-medium disabled:opacity-50"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={() => handleDeleteTask(taskToDelete)}
-                disabled={isDeleting}
-                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 text-sm font-medium disabled:opacity-50 flex items-center gap-2"
-              >
-                {isDeleting ? (
-                  <>
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                    Deleting...
-                  </>
-                ) : (
-                  <>
-                    <Trash2 className="h-4 w-4" />
-                    Delete
-                  </>
-                )}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <AnimatePresence>
+        {taskToDelete && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+            onClick={() => !isDeleting && setTaskToDelete(null)}
+          >
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              onClick={(e) => e.stopPropagation()}
+              className="card max-w-md w-full"
+            >
+              <h3 className="heading-4 mb-3">Delete Task</h3>
+              <p className="body-text-sm mb-6">
+                Are you sure you want to delete this task? This action cannot be undone and will also delete all related assignments and submissions.
+              </p>
+              <div className="flex gap-3 justify-end">
+                <button
+                  onClick={() => setTaskToDelete(null)}
+                  disabled={isDeleting}
+                  className="btn-secondary btn-sm"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={() => handleDeleteTask(taskToDelete)}
+                  disabled={isDeleting}
+                  className="btn-danger btn-sm flex items-center gap-2"
+                >
+                  {isDeleting ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      Deleting...
+                    </>
+                  ) : (
+                    <>
+                      <Trash2 className="h-4 w-4" />
+                      Delete
+                    </>
+                  )}
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Edit Task Modal */}
       {taskToEdit && (
@@ -596,86 +667,128 @@ export default function TaskList({ tasks: initialTasks, studentTasks, students, 
         />
       )}
 
-      {/* Success/Error Messages for Edit */}
-      {editSuccess && (
-        <div className="fixed top-4 right-4 bg-green-50 border border-green-200 text-green-800 px-4 py-3 rounded-lg shadow-lg z-50 flex items-center gap-2">
-          <CheckCircle className="h-5 w-5" />
-          <span>Task updated successfully</span>
-          <button
-            onClick={() => setEditSuccess(false)}
-            className="ml-2 text-green-600 hover:text-green-800"
+      {/* Toast Notifications - Edit, Due Date, Review */}
+      <AnimatePresence>
+        {editSuccess && (
+          <motion.div
+            initial={{ opacity: 0, x: 100 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: 100 }}
+            transition={{ delay: 0.1 }}
+            className="toast toast-success"
+            style={{ top: '4rem' }}
           >
-            <X className="h-4 w-4" />
-          </button>
-        </div>
-      )}
+            <CheckCircle className="h-5 w-5 flex-shrink-0" />
+            <span className="font-medium">Task updated successfully</span>
+            <button
+              onClick={() => setEditSuccess(false)}
+              className="ml-auto text-green-600 hover:text-green-900 transition-colors"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </motion.div>
+        )}
 
-      {editError && (
-        <div className="fixed top-4 right-4 bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg shadow-lg z-50 flex items-center gap-2">
-          <X className="h-5 w-5" />
-          <span>{editError}</span>
-          <button
-            onClick={() => setEditError(null)}
-            className="ml-2 text-red-600 hover:text-red-800"
+        {editError && (
+          <motion.div
+            initial={{ opacity: 0, x: 100 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: 100 }}
+            transition={{ delay: 0.1 }}
+            className="toast toast-error"
+            style={{ top: '4rem' }}
           >
-            <X className="h-4 w-4" />
-          </button>
-        </div>
-      )}
+            <X className="h-5 w-5 flex-shrink-0" />
+            <span className="font-medium">{editError}</span>
+            <button
+              onClick={() => setEditError(null)}
+              className="ml-auto text-red-600 hover:text-red-900 transition-colors"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </motion.div>
+        )}
 
-      {/* Success/Error Messages for Due Date */}
-      {dueDateSuccess && (
-        <div className="fixed top-20 right-4 bg-green-50 border border-green-200 text-green-800 px-4 py-3 rounded-lg shadow-lg z-50 flex items-center gap-2">
-          <CheckCircle className="h-5 w-5" />
-          <span>Due date updated successfully</span>
-          <button
-            onClick={() => setDueDateSuccess(false)}
-            className="ml-2 text-green-600 hover:text-green-800"
+        {dueDateSuccess && (
+          <motion.div
+            initial={{ opacity: 0, x: 100 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: 100 }}
+            transition={{ delay: 0.2 }}
+            className="toast toast-success"
+            style={{ top: '8rem' }}
           >
-            <X className="h-4 w-4" />
-          </button>
-        </div>
-      )}
+            <CheckCircle className="h-5 w-5 flex-shrink-0" />
+            <span className="font-medium">Due date updated successfully</span>
+            <button
+              onClick={() => setDueDateSuccess(false)}
+              className="ml-auto text-green-600 hover:text-green-900 transition-colors"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </motion.div>
+        )}
 
-      {dueDateError && (
-        <div className="fixed top-20 right-4 bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg shadow-lg z-50 flex items-center gap-2">
-          <X className="h-5 w-5" />
-          <span>{dueDateError}</span>
-          <button
-            onClick={() => setDueDateError(null)}
-            className="ml-2 text-red-600 hover:text-red-800"
+        {dueDateError && (
+          <motion.div
+            initial={{ opacity: 0, x: 100 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: 100 }}
+            transition={{ delay: 0.2 }}
+            className="toast toast-error"
+            style={{ top: '8rem' }}
           >
-            <X className="h-4 w-4" />
-          </button>
-        </div>
-      )}
+            <X className="h-5 w-5 flex-shrink-0" />
+            <span className="font-medium">{dueDateError}</span>
+            <button
+              onClick={() => setDueDateError(null)}
+              className="ml-auto text-red-600 hover:text-red-900 transition-colors"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </motion.div>
+        )}
 
-      {/* Success/Error Messages for Review */}
-      {reviewSuccess && (
-        <div className="fixed top-36 right-4 bg-green-50 border border-green-200 text-green-800 px-4 py-3 rounded-lg shadow-lg z-50 flex items-center gap-2">
-          <CheckCircle className="h-5 w-5" />
-          <span>Submission reviewed successfully</span>
-          <button
-            onClick={() => setReviewSuccess(false)}
-            className="ml-2 text-green-600 hover:text-green-800"
+        {reviewSuccess && (
+          <motion.div
+            initial={{ opacity: 0, x: 100 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: 100 }}
+            transition={{ delay: 0.3 }}
+            className="toast toast-success"
+            style={{ top: '12rem' }}
           >
-            <X className="h-4 w-4" />
-          </button>
-        </div>
-      )}
+            <CheckCircle className="h-5 w-5 flex-shrink-0" />
+            <span className="font-medium">Submission reviewed successfully</span>
+            <button
+              onClick={() => setReviewSuccess(false)}
+              className="ml-auto text-green-600 hover:text-green-900 transition-colors"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </motion.div>
+        )}
 
-      {reviewError && (
-        <div className="fixed top-36 right-4 bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg shadow-lg z-50 flex items-center gap-2">
-          <X className="h-5 w-5" />
-          <span>{reviewError}</span>
-          <button
-            onClick={() => setReviewError(null)}
-            className="ml-2 text-red-600 hover:text-red-800"
+        {reviewError && (
+          <motion.div
+            initial={{ opacity: 0, x: 100 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: 100 }}
+            transition={{ delay: 0.3 }}
+            className="toast toast-error"
+            style={{ top: '12rem' }}
           >
-            <X className="h-4 w-4" />
-          </button>
-        </div>
-      )}
+            <X className="h-5 w-5 flex-shrink-0" />
+            <span className="font-medium">{reviewError}</span>
+            <button
+              onClick={() => setReviewError(null)}
+              className="ml-auto text-red-600 hover:text-red-900 transition-colors"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {selectedTask && (
         <AssignTaskModal
@@ -717,21 +830,33 @@ function EditTaskModal({
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg p-6 max-w-2xl w-full mx-4 shadow-xl max-h-[90vh] overflow-y-auto">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-bold text-gray-900">Edit Task</h3>
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+      onClick={!isLoading ? onClose : undefined}
+    >
+      <motion.div
+        initial={{ scale: 0.95, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        exit={{ scale: 0.95, opacity: 0 }}
+        onClick={(e) => e.stopPropagation()}
+        className="card max-w-2xl w-full max-h-[90vh] overflow-y-auto"
+      >
+        <div className="flex items-center justify-between mb-6">
+          <h3 className="heading-4">Edit Task</h3>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-gray-600"
+            className="btn-icon text-gray-400 hover:text-gray-600"
             disabled={isLoading}
           >
             <X className="h-5 w-5" />
           </button>
         </div>
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-6">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="form-label">
               Task Title <span className="text-red-500">*</span>
             </label>
             <input
@@ -739,11 +864,11 @@ function EditTaskModal({
               required
               value={formData.title}
               onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#4F46E5] focus:border-transparent"
+              className="form-input"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="form-label">
               Description <span className="text-red-500">*</span>
             </label>
             <textarea
@@ -751,44 +876,44 @@ function EditTaskModal({
               rows={4}
               value={formData.description}
               onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#4F46E5] focus:border-transparent"
+              className="form-input"
             />
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Week Number</label>
+              <label className="form-label">Week Number</label>
               <input
                 type="number"
                 min="1"
                 max="16"
                 value={formData.week}
                 onChange={(e) => setFormData({ ...formData, week: e.target.value })}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#4F46E5] focus:border-transparent"
+                className="form-input"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Due Date</label>
+              <label className="form-label">Due Date</label>
               <input
                 type="date"
                 value={formData.dueDate}
                 onChange={(e) => setFormData({ ...formData, dueDate: e.target.value })}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#4F46E5] focus:border-transparent"
+                className="form-input"
               />
             </div>
           </div>
-          <div className="flex gap-3 justify-end">
+          <div className="flex gap-3 justify-end pt-4 border-t border-gray-200">
             <button
               type="button"
               onClick={onClose}
               disabled={isLoading}
-              className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 text-sm font-medium disabled:opacity-50"
+              className="btn-secondary btn-sm"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={isLoading}
-              className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 text-sm font-medium disabled:opacity-50 flex items-center gap-2"
+              className="btn-primary btn-sm flex items-center gap-2"
             >
               {isLoading ? (
                 <>
@@ -804,8 +929,8 @@ function EditTaskModal({
             </button>
           </div>
         </form>
-      </div>
-    </div>
+      </motion.div>
+    </motion.div>
   );
 }
 
@@ -835,13 +960,25 @@ function DueDateModal({
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4 shadow-xl">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-bold text-gray-900">Change Due Date</h3>
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+      onClick={!isLoading ? onClose : undefined}
+    >
+      <motion.div
+        initial={{ scale: 0.95, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        exit={{ scale: 0.95, opacity: 0 }}
+        onClick={(e) => e.stopPropagation()}
+        className="card max-w-md w-full"
+      >
+        <div className="flex items-center justify-between mb-6">
+          <h3 className="heading-4">Change Due Date</h3>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-gray-600"
+            className="btn-icon text-gray-400 hover:text-gray-600"
             disabled={isLoading}
           >
             <X className="h-5 w-5" />
@@ -849,7 +986,7 @@ function DueDateModal({
         </div>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="form-label">
               New Due Date <span className="text-red-500">*</span>
             </label>
             <input
@@ -858,23 +995,23 @@ function DueDateModal({
               min={minDate}
               value={newDate}
               onChange={(e) => setNewDate(e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#4F46E5] focus:border-transparent"
+              className="form-input"
             />
-            <p className="text-xs text-gray-500 mt-1">Cannot select past dates</p>
+            <p className="form-error text-gray-500">Cannot select past dates</p>
           </div>
-          <div className="flex gap-3 justify-end">
+          <div className="flex gap-3 justify-end pt-4 border-t border-gray-200">
             <button
               type="button"
               onClick={onClose}
               disabled={isLoading}
-              className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 text-sm font-medium disabled:opacity-50"
+              className="btn-secondary btn-sm"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={isLoading || !newDate}
-              className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 text-sm font-medium disabled:opacity-50 flex items-center gap-2"
+              className="btn-primary btn-sm flex items-center gap-2"
             >
               {isLoading ? (
                 <>
@@ -890,8 +1027,8 @@ function DueDateModal({
             </button>
           </div>
         </form>
-      </div>
-    </div>
+      </motion.div>
+    </motion.div>
   );
 }
 
@@ -927,31 +1064,42 @@ function SubmissionsModal({
   };
 
   const getStatusBadge = (status: string) => {
-    const statusColors = {
-      ACCEPTED: "bg-green-100 text-green-800",
-      APPROVED: "bg-green-100 text-green-800", // Support both for compatibility
-      REJECTED: "bg-red-100 text-red-800",
-      PENDING: "bg-yellow-100 text-yellow-800",
-    };
-    return statusColors[status as keyof typeof statusColors] || "bg-gray-100 text-gray-800";
+    if (status === "ACCEPTED" || status === "APPROVED") return "badge-success";
+    if (status === "REJECTED") return "badge-danger";
+    if (status === "PENDING") return "badge-warning";
+    return "badge-gray";
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg p-6 max-w-4xl w-full mx-4 shadow-xl max-h-[90vh] overflow-y-auto">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-bold text-gray-900">Task Submissions</h3>
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+      onClick={onClose}
+    >
+      <motion.div
+        initial={{ scale: 0.95, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        exit={{ scale: 0.95, opacity: 0 }}
+        onClick={(e) => e.stopPropagation()}
+        className="card max-w-4xl w-full max-h-[90vh] overflow-y-auto"
+      >
+        <div className="flex items-center justify-between mb-6">
+          <h3 className="heading-4">Task Submissions</h3>
           <div className="flex items-center gap-2">
-            <button
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
               onClick={onRefresh}
-              className="text-indigo-600 hover:text-indigo-700 text-sm"
+              className="btn-secondary btn-sm"
               disabled={isLoading}
             >
               Refresh
-            </button>
+            </motion.button>
             <button
               onClick={onClose}
-              className="text-gray-400 hover:text-gray-600"
+              className="btn-icon text-gray-400 hover:text-gray-600"
             >
               <X className="h-5 w-5" />
             </button>
@@ -959,70 +1107,82 @@ function SubmissionsModal({
         </div>
 
         {isLoading ? (
-          <div className="flex items-center justify-center py-8">
-            <Loader2 className="h-6 w-6 animate-spin text-indigo-600" />
-            <span className="ml-2 text-gray-600">Loading submissions...</span>
+          <div className="empty-state py-12">
+            <Loader2 className="h-8 w-8 animate-spin text-indigo-600 mx-auto" />
+            <p className="body-text-sm mt-4">Loading submissions...</p>
           </div>
         ) : submissions.length === 0 ? (
-          <div className="text-center py-8 text-gray-500">
-            No submissions yet for this task.
+          <div className="empty-state py-12">
+            <ClipboardList className="empty-state-icon" />
+            <h3 className="empty-state-title">No Submissions Yet</h3>
+            <p className="empty-state-description">
+              No students have submitted work for this task yet.
+            </p>
           </div>
         ) : (
           <div className="space-y-4">
-            {submissions.map((submission) => (
-              <div
+            <AnimatePresence>
+              {submissions.map((submission, index) => (
+              <motion.div
                 key={submission.id}
-                className="border border-gray-200 rounded-lg p-4"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                transition={{ duration: 0.2, delay: index * 0.05 }}
+                className="card card-hover"
               >
-                <div className="flex items-start justify-between mb-3">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-3 mb-2">
-                      <div className="w-10 h-10 rounded-full bg-indigo-100 flex items-center justify-center">
-                        <User className="h-5 w-5 text-indigo-600" />
+                <div className="flex items-start justify-between gap-4">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-3 mb-4">
+                      <div className="w-12 h-12 rounded-full bg-indigo-100 flex items-center justify-center flex-shrink-0">
+                        <User className="h-6 w-6 text-indigo-600" />
                       </div>
-                      <div>
-                        <p className="font-semibold text-gray-900">
+                      <div className="min-w-0">
+                        <p className="font-semibold text-gray-900 truncate">
                           {submission.User?.name || submission.User?.email || "Unknown Student"}
                         </p>
-                        <p className="text-xs text-gray-500">
+                        <p className="text-xs text-gray-500 mt-0.5">
                           Submitted: {new Date(submission.createdAt).toLocaleString()}
                         </p>
                       </div>
                     </div>
                     {submission.answerText && (
-                      <div className="mt-2 p-3 bg-gray-50 rounded-lg">
-                        <p className="text-sm text-gray-700">{submission.answerText}</p>
+                      <div className="mt-3 p-4 bg-gray-50 rounded-xl border border-gray-200">
+                        <p className="body-text-sm text-gray-700 whitespace-pre-wrap">{submission.answerText}</p>
                       </div>
                     )}
                     {submission.fileUrl && (
-                      <div className="mt-2">
+                      <div className="mt-3">
                         <a
                           href={submission.fileUrl}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="text-sm text-indigo-600 hover:underline"
+                          className="inline-flex items-center gap-2 text-sm text-indigo-600 hover:text-indigo-700 font-medium transition-colors"
                         >
-                          View submitted file →
+                          <Eye size={16} />
+                          View submitted file
                         </a>
                       </div>
                     )}
                     {submission.feedback && (
-                      <div className="mt-2 p-3 bg-yellow-50 rounded-lg">
-                        <p className="text-xs font-medium text-yellow-800 mb-1">Admin Feedback:</p>
-                        <p className="text-sm text-yellow-700">{submission.feedback}</p>
+                      <div className="mt-3 p-4 bg-yellow-50 rounded-xl border border-yellow-200">
+                        <p className="text-xs font-semibold text-yellow-800 mb-1.5 uppercase tracking-wide">Admin Feedback:</p>
+                        <p className="body-text-sm text-yellow-700">{submission.feedback}</p>
                       </div>
                     )}
                   </div>
-                  <div className="flex flex-col items-end gap-2">
-                    <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusBadge(submission.status)}`}>
+                  <div className="flex flex-col items-end gap-3 flex-shrink-0">
+                    <span className={`badge ${getStatusBadge(submission.status)}`}>
                       {submission.status}
                     </span>
                     {submission.status === "PENDING" && (
                       <div className="flex gap-2">
-                        <button
+                        <motion.button
+                          whileHover={{ scale: 1.05 }}
+                          whileTap={{ scale: 0.95 }}
                           onClick={() => onReview(submission.id, "ACCEPTED")}
                           disabled={isReviewing === submission.id}
-                          className="px-3 py-1 bg-green-600 text-white rounded-lg hover:bg-green-700 text-xs font-medium disabled:opacity-50 flex items-center gap-1"
+                          className="btn-primary btn-sm flex items-center gap-1.5"
                         >
                           {isReviewing === submission.id ? (
                             <Loader2 className="h-3 w-3 animate-spin" />
@@ -1030,59 +1190,69 @@ function SubmissionsModal({
                             <Check className="h-3 w-3" />
                           )}
                           Approve
-                        </button>
-                        <button
+                        </motion.button>
+                        <motion.button
+                          whileHover={{ scale: 1.05 }}
+                          whileTap={{ scale: 0.95 }}
                           onClick={() => setRejectingSubmission(submission.id)}
                           disabled={isReviewing === submission.id}
-                          className="px-3 py-1 bg-red-600 text-white rounded-lg hover:bg-red-700 text-xs font-medium disabled:opacity-50 flex items-center gap-1"
+                          className="btn-danger btn-sm flex items-center gap-1.5"
                         >
                           <XCircle className="h-3 w-3" />
                           Reject
-                        </button>
+                        </motion.button>
                       </div>
                     )}
                   </div>
                 </div>
 
                 {/* Rejection Feedback Form */}
-                {rejectingSubmission === submission.id && (
-                  <div className="mt-3 pt-3 border-t border-gray-200">
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Rejection Feedback <span className="text-red-500">*</span>
-                    </label>
-                    <textarea
-                      value={rejectionFeedback}
-                      onChange={(e) => setRejectionFeedback(e.target.value)}
-                      rows={3}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent text-sm"
-                      placeholder="Provide feedback for rejection..."
-                    />
-                    <div className="flex gap-2 mt-2">
-                      <button
-                        onClick={() => handleReject(submission.id)}
-                        disabled={!rejectionFeedback.trim() || isReviewing === submission.id}
-                        className="px-3 py-1 bg-red-600 text-white rounded-lg hover:bg-red-700 text-xs font-medium disabled:opacity-50"
-                      >
-                        Submit Rejection
-                      </button>
-                      <button
-                        onClick={() => {
-                          setRejectingSubmission(null);
-                          setRejectionFeedback("");
-                        }}
-                        className="px-3 py-1 border border-gray-300 rounded-lg hover:bg-gray-50 text-xs font-medium"
-                      >
-                        Cancel
-                      </button>
-                    </div>
-                  </div>
-                )}
-              </div>
+                <AnimatePresence>
+                  {rejectingSubmission === submission.id && (
+                    <motion.div
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: "auto", opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      className="mt-4 pt-4 border-t border-gray-200 overflow-hidden"
+                    >
+                      <label className="form-label">
+                        Rejection Feedback <span className="text-red-500">*</span>
+                      </label>
+                      <textarea
+                        value={rejectionFeedback}
+                        onChange={(e) => setRejectionFeedback(e.target.value)}
+                        rows={3}
+                        className="form-input"
+                        placeholder="Provide feedback for rejection..."
+                      />
+                      <div className="flex gap-2 mt-3">
+                        <button
+                          onClick={() => handleReject(submission.id)}
+                          disabled={!rejectionFeedback.trim() || isReviewing === submission.id}
+                          className="btn-danger btn-sm"
+                        >
+                          Submit Rejection
+                        </button>
+                        <button
+                          onClick={() => {
+                            setRejectingSubmission(null);
+                            setRejectionFeedback("");
+                          }}
+                          className="btn-secondary btn-sm"
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </motion.div>
             ))}
+            </AnimatePresence>
           </div>
         )}
-      </div>
-    </div>
+      </motion.div>
+    </motion.div>
   );
 }
 
